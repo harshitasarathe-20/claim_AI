@@ -2,179 +2,921 @@ import { useState } from "react";
 import { submitClaim } from "../api/claimApi";
 import type { AIResult } from "../types/claim.types";
 import AIResultCard from "../components/AIResultCard";
+import FileUpload from "../components/FileUpload";
 
-export default function CustomerPortal() {
-  const [name, setName]           = useState("");
-  const [amount, setAmount]       = useState("");
-  const [desc, setDesc]           = useState("");
-  const [images, setImages]       = useState<File[]>([]);
-  const [policy, setPolicy]       = useState<File | null>(null);
-  const [loading, setLoading]     = useState(false);
-  const [result, setResult]       = useState<AIResult | null>(null);
-  const [error, setError]         = useState("");
+const STEPS = ["Claim Details", "Upload Files", "AI Analysis"];
 
-  const field: React.CSSProperties = {
-    width: "100%",
-    padding: "10px 12px",
-    border: "1px solid #D1D5DB",
-    borderRadius: "8px",
-    fontSize: "14px",
-    color: "#111827",
-    background: "#fff",
-    boxSizing: "border-box",
-    fontFamily: "inherit",
-  };
-
-  const label = (text: string) => (
+function Label({ text, required }: { text: string; required?: boolean }) {
+  return (
     <label
       style={{
-        display: "block",
+        display: "flex",
+        alignItems: "center",
+        gap: "4px",
         fontSize: "13px",
         fontWeight: 500,
-        color: "#374151",
-        marginBottom: "6px",
+        color: "var(--text-primary)",
+        marginBottom: "7px",
       }}
     >
       {text}
+      {required && (
+        <span style={{ color: "#DC2626", fontSize: "12px" }}>*</span>
+      )}
     </label>
   );
+}
+
+function StepIndicator({
+  current,
+  steps,
+}: {
+  current: number;
+  steps: string[];
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        marginBottom: "32px",
+        gap: "0",
+      }}
+    >
+      {steps.map((step, i) => (
+        <div
+          key={i}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            flex: i < steps.length - 1 ? 1 : "none",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
+            <div
+              style={{
+                width: "28px",
+                height: "28px",
+                borderRadius: "50%",
+                background:
+                  i < current
+                    ? "var(--brand-700)"
+                    : i === current
+                    ? "var(--brand-900)"
+                    : "var(--surface-3)",
+                border:
+                  i === current
+                    ? "2px solid var(--brand-900)"
+                    : "2px solid transparent",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transition: "all 0.25s",
+                boxShadow:
+                  i === current
+                    ? "0 0 0 3px rgba(30,58,92,0.15)"
+                    : "none",
+              }}
+            >
+              {i < current ? (
+                <i
+                  className="ti ti-check"
+                  style={{ color: "#fff", fontSize: "13px" }}
+                />
+              ) : (
+                <span
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color:
+                      i === current ? "#fff" : "var(--text-muted)",
+                  }}
+                >
+                  {i + 1}
+                </span>
+              )}
+            </div>
+
+            <span
+              style={{
+                fontSize: "11px",
+                fontWeight: i === current ? 500 : 400,
+                color:
+                  i === current
+                    ? "var(--text-primary)"
+                    : "var(--text-muted)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {step}
+            </span>
+          </div>
+
+          {i < steps.length - 1 && (
+            <div
+              style={{
+                flex: 1,
+                height: "1.5px",
+                background:
+                  i < current
+                    ? "var(--brand-700)"
+                    : "var(--surface-3)",
+                margin: "0 6px",
+                marginBottom: "22px",
+                transition: "background 0.25s",
+              }}
+            />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function CustomerPortal() {
+  const [name, setName] = useState("");
+  const [amount, setAmount] = useState("");
+  const [desc, setDesc] = useState("");
+  const [images, setImages] = useState<File[]>([]);
+  const [policy, setPolicy] = useState<File[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<AIResult | null>(null);
+  const [error, setError] = useState("");
+  const [step, setStep] = useState(0);
 
   const handleSubmit = async () => {
-    if (!name || !amount || !desc || !policy || images.length === 0) {
-      setError("Please fill all fields, upload a policy PDF and at least one photo.");
+    if (
+      !name ||
+      !amount ||
+      !desc ||
+      policy.length === 0 ||
+      images.length === 0
+    ) {
+      setError("Please complete all fields and upload required files.");
       return;
     }
+
     setError("");
     setLoading(true);
     setResult(null);
+    setStep(2);
+
     try {
-      const res = await submitClaim(name, amount, desc, images, policy);
+      const res = await submitClaim(
+        name,
+        amount,
+        desc,
+        images,
+        policy[0]
+      );
+
       setResult(res.ai_result);
     } catch {
-      setError("Could not reach the backend. Make sure it is running on localhost:8000.");
+      setError(
+        "Could not reach the backend. Make sure it is running on localhost:8000."
+      );
+      setStep(1);
     } finally {
       setLoading(false);
     }
   };
 
+  const canProceedStep0 =
+    name.trim() && amount.trim() && desc.trim();
+
+  const canProceedStep1 =
+    policy.length > 0 && images.length > 0;
+
   return (
-    <div style={{ maxWidth: 600, margin: "40px auto", padding: "0 20px" }}>
-      <h1 style={{ fontSize: "22px", fontWeight: 600, color: "#111827", marginBottom: "6px" }}>
-        Submit a claim
-      </h1>
-      <p style={{ fontSize: "14px", color: "#6B7280", marginBottom: "28px" }}>
-        Upload your policy and damage photos — AI will estimate your coverage instantly.
-      </p>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-
-        <div>
-          {label("Your full name")}
-          <input
-            style={field}
-            placeholder="e.g. Rahul Sharma"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </div>
-
-        <div>
-          {label("Claim amount (₹)")}
-          <input
-            style={field}
-            type="number"
-            placeholder="e.g. 85000"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
-        </div>
-
-        <div>
-          {label("Describe the damage")}
-          <textarea
-            style={{ ...field, height: "88px", resize: "vertical" }}
-            placeholder="e.g. Front bumper and bonnet damaged in a rear-end collision at a traffic signal..."
-            value={desc}
-            onChange={(e) => setDesc(e.target.value)}
-          />
-        </div>
-
-        <div>
-          {label("Policy document (PDF)")}
-          <input
-            type="file"
-            accept=".pdf"
-            style={{ fontSize: "13px", color: "#374151" }}
-            onChange={(e) => setPolicy(e.target.files?.[0] ?? null)}
-          />
-          {policy && (
-            <p style={{ fontSize: "12px", color: "#16A34A", marginTop: "5px" }}>
-              ✓ {policy.name}
-            </p>
-          )}
-        </div>
-
-        <div>
-          {label("Damage photos — upload 3 to 5 for best results")}
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            style={{ fontSize: "13px", color: "#374151" }}
-            onChange={(e) => setImages(Array.from(e.target.files ?? []))}
-          />
-          {images.length > 0 && (
-            <p style={{ fontSize: "12px", color: "#16A34A", marginTop: "5px" }}>
-              ✓ {images.length} photo{images.length > 1 ? "s" : ""} selected
-            </p>
-          )}
-        </div>
-
-        {error && (
+    <div
+      style={{
+        maxWidth: "1100px",
+        margin: "0 auto",
+        padding: "36px 24px",
+        display: "grid",
+        gridTemplateColumns: "1fr 340px",
+        gap: "32px",
+        alignItems: "start",
+      }}
+    >
+      {/* Left column */}
+      <div>
+        <div style={{ marginBottom: "28px" }}>
           <div
             style={{
-              padding: "10px 14px",
-              background: "#FEF2F2",
-              border: "1px solid #FECACA",
-              borderRadius: "8px",
-              fontSize: "13px",
-              color: "#991B1B",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              marginBottom: "8px",
             }}
           >
-            {error}
-          </div>
-        )}
+            <div
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "10px",
+                background: "var(--brand-50)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <i
+                className="ti ti-car"
+                style={{ fontSize: "18px", color: "var(--brand-700)" }}
+              />
+            </div>
 
-        <button
-          onClick={handleSubmit}
-          disabled={loading}
+            <div>
+              <h1
+                style={{
+                  fontFamily: "'DM Serif Display', serif",
+                  fontSize: "22px",
+                  color: "var(--text-primary)",
+                  lineHeight: 1.2,
+                }}
+              >
+                Submit a Claim
+              </h1>
+            </div>
+          </div>
+
+          <p
+            style={{
+              fontSize: "14px",
+              color: "var(--text-secondary)",
+              maxWidth: "480px",
+              lineHeight: 1.6,
+            }}
+          >
+            Upload your policy document and damage photos. Our AI engine
+            analyses your claim in seconds and provides an instant coverage
+            estimate.
+          </p>
+        </div>
+
+        <StepIndicator current={step} steps={STEPS} />
+
+        <div
           style={{
-            padding: "11px 0",
-            background: loading ? "#A5B4FC" : "#4F46E5",
-            color: "#fff",
-            border: "none",
-            borderRadius: "8px",
-            fontSize: "14px",
-            fontWeight: 500,
-            cursor: loading ? "not-allowed" : "pointer",
-            transition: "background 0.2s",
+            background: "var(--surface-0)",
+            border: "1px solid var(--surface-3)",
+            borderRadius: "var(--radius-lg)",
+            boxShadow: "var(--shadow-sm)",
+            overflow: "hidden",
           }}
         >
-          {loading ? "Analysing your claim..." : "Submit claim →"}
-        </button>
+          {/* STEP 0 */}
+          {step === 0 && (
+            <div
+              style={{ padding: "24px 28px" }}
+              className="animate-slideDown"
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  marginBottom: "20px",
+                  paddingBottom: "16px",
+                  borderBottom: "1px solid var(--surface-2)",
+                }}
+              >
+                <i
+                  className="ti ti-id-badge"
+                  style={{ fontSize: "16px", color: "var(--brand-600)" }}
+                />
+
+                <h2
+                  style={{
+                    fontSize: "15px",
+                    fontWeight: 600,
+                    color: "var(--text-primary)",
+                  }}
+                >
+                  Claim Details
+                </h2>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "18px",
+                }}
+              >
+                <div>
+                  <Label text="Full name" required />
+
+                  <div style={{ position: "relative" }}>
+                    <i
+                      className="ti ti-user"
+                      style={{
+                        position: "absolute",
+                        left: "12px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        fontSize: "15px",
+                        color: "var(--text-muted)",
+                        pointerEvents: "none",
+                      }}
+                    />
+
+                    <input
+                      type="text"
+                      placeholder="e.g. Rahul Sharma"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      style={{ paddingLeft: "36px" }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label text="Claim amount" required />
+
+                  <div style={{ position: "relative" }}>
+                    <span
+                      style={{
+                        position: "absolute",
+                        left: "12px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        fontSize: "14px",
+                        color: "var(--text-muted)",
+                        fontWeight: 500,
+                        pointerEvents: "none",
+                      }}
+                    >
+                      ₹
+                    </span>
+
+                    <input
+                      type="number"
+                      placeholder="e.g. 85000"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      style={{ paddingLeft: "26px" }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label text="Describe the damage" required />
+
+                  <textarea
+                    placeholder="Describe what happened — e.g. Front bumper and bonnet damaged in a rear-end collision at a traffic signal on MG Road. Airbag did not deploy."
+                    value={desc}
+                    onChange={(e) => setDesc(e.target.value)}
+                    style={{ minHeight: "110px" }}
+                  />
+
+                  <p
+                    style={{
+                      fontSize: "11px",
+                      color: "var(--text-muted)",
+                      marginTop: "5px",
+                    }}
+                  >
+                    Be as specific as possible — location, cause, and visible
+                    damage areas.
+                  </p>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  marginTop: "24px",
+                  display: "flex",
+                  justifyContent: "flex-end",
+                }}
+              >
+                <button
+                  onClick={() => setStep(1)}
+                  disabled={!canProceedStep0}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "7px",
+                    padding: "10px 22px",
+                    background: canProceedStep0
+                      ? "var(--brand-900)"
+                      : "var(--surface-3)",
+                    color: canProceedStep0
+                      ? "#fff"
+                      : "var(--text-muted)",
+                    border: "none",
+                    borderRadius: "var(--radius-md)",
+                    fontSize: "13px",
+                    fontWeight: 500,
+                    cursor: canProceedStep0 ? "pointer" : "not-allowed",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  Continue
+                  <i
+                    className="ti ti-arrow-right"
+                    style={{ fontSize: "14px" }}
+                  />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 1 */}
+          {step === 1 && (
+            <div
+              style={{ padding: "24px 28px" }}
+              className="animate-slideDown"
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  marginBottom: "20px",
+                  paddingBottom: "16px",
+                  borderBottom: "1px solid var(--surface-2)",
+                }}
+              >
+                <i
+                  className="ti ti-upload"
+                  style={{ fontSize: "16px", color: "var(--brand-600)" }}
+                />
+
+                <h2
+                  style={{
+                    fontSize: "15px",
+                    fontWeight: 600,
+                    color: "var(--text-primary)",
+                  }}
+                >
+                  Upload Documents
+                </h2>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "22px",
+                }}
+              >
+                <div>
+                  <Label text="Policy document (PDF)" required />
+
+                  <FileUpload
+                    accept=".pdf"
+                    label="Upload your policy PDF"
+                    hint="Drag and drop or click to browse"
+                    icon="ti-file-type-pdf"
+                    files={policy}
+                    onChange={setPolicy}
+                  />
+                </div>
+
+                <div>
+                  <Label text="Damage photos" required />
+
+                  <FileUpload
+                    accept="image/*"
+                    multiple
+                    maxFiles={5}
+                    label="Upload damage photos (3–5 recommended)"
+                    hint="Drag and drop or click to browse"
+                    icon="ti-camera"
+                    files={images}
+                    onChange={setImages}
+                  />
+                </div>
+              </div>
+
+              {error && (
+                <div
+                  style={{
+                    marginTop: "16px",
+                    padding: "11px 14px",
+                    background: "var(--danger-bg)",
+                    border: "1px solid var(--danger-border)",
+                    borderRadius: "var(--radius-md)",
+                    fontSize: "13px",
+                    color: "var(--danger-text)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <i
+                    className="ti ti-alert-circle"
+                    style={{ fontSize: "15px", flexShrink: 0 }}
+                  />
+                  {error}
+                </div>
+              )}
+
+              <div
+                style={{
+                  marginTop: "24px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                }}
+              >
+                <button
+                  onClick={() => setStep(0)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "7px",
+                    padding: "10px 18px",
+                    background: "transparent",
+                    color: "var(--text-secondary)",
+                    border: "1px solid var(--surface-3)",
+                    borderRadius: "var(--radius-md)",
+                    fontSize: "13px",
+                    fontWeight: 500,
+                    cursor: "pointer",
+                  }}
+                >
+                  <i
+                    className="ti ti-arrow-left"
+                    style={{ fontSize: "14px" }}
+                  />
+                  Back
+                </button>
+
+                <button
+                  onClick={handleSubmit}
+                  disabled={!canProceedStep1}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "10px 22px",
+                    background: canProceedStep1
+                      ? "var(--brand-900)"
+                      : "var(--surface-3)",
+                    color: canProceedStep1
+                      ? "#fff"
+                      : "var(--text-muted)",
+                    border: "none",
+                    borderRadius: "var(--radius-md)",
+                    fontSize: "13px",
+                    fontWeight: 500,
+                    cursor: canProceedStep1 ? "pointer" : "not-allowed",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  <i
+                    className="ti ti-cpu"
+                    style={{ fontSize: "14px" }}
+                  />
+                  Analyse with AI
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 2 */}
+          {step === 2 && (
+            <div
+              style={{ padding: "24px 28px" }}
+              className="animate-slideDown"
+            >
+              {loading ? (
+                <div style={{ textAlign: "center", padding: "32px 0" }}>
+                  <div
+                    style={{
+                      width: "52px",
+                      height: "52px",
+                      borderRadius: "14px",
+                      background: "var(--brand-50)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      margin: "0 auto 16px",
+                      animation: "pulse 1.5s ease-in-out infinite",
+                    }}
+                  >
+                    <i
+                      className="ti ti-cpu"
+                      style={{ fontSize: "24px", color: "var(--brand-600)" }}
+                    />
+                  </div>
+
+                  <p
+                    style={{
+                      fontSize: "15px",
+                      fontWeight: 500,
+                      color: "var(--text-primary)",
+                      marginBottom: "6px",
+                    }}
+                  >
+                    Analysing your claim...
+                  </p>
+
+                  <p
+                    style={{
+                      fontSize: "13px",
+                      color: "var(--text-muted)",
+                    }}
+                  >
+                    AI is reviewing damage photos and policy documents
+                  </p>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "8px",
+                      maxWidth: "300px",
+                      margin: "20px auto 0",
+                    }}
+                  >
+                    {[
+                      "Parsing policy document",
+                      "Analysing damage photos",
+                      "Mapping coverage clauses",
+                    ].map((t, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                        }}
+                      >
+                        <div
+                          className="skeleton"
+                          style={{
+                            width: "14px",
+                            height: "14px",
+                            borderRadius: "50%",
+                            flexShrink: 0,
+                          }}
+                        />
+
+                        <div
+                          className="skeleton"
+                          style={{
+                            height: "12px",
+                            flex: 1,
+                            borderRadius: "4px",
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : result ? (
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    <i
+                      className="ti ti-circle-check"
+                      style={{ fontSize: "18px", color: "#16A34A" }}
+                    />
+
+                    <h2
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: 600,
+                        color: "var(--text-primary)",
+                      }}
+                    >
+                      Analysis Complete
+                    </h2>
+                  </div>
+
+                  <AIResultCard result={result} variant="customer" />
+
+                  <div
+                    style={{
+                      marginTop: "20px",
+                      display: "flex",
+                      gap: "10px",
+                    }}
+                  >
+                    <button
+                      onClick={() => {
+                        setResult(null);
+                        setStep(0);
+                        setName("");
+                        setAmount("");
+                        setDesc("");
+                        setImages([]);
+                        setPolicy([]);
+                      }}
+                      style={{
+                        flex: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "7px",
+                        padding: "10px",
+                        background: "transparent",
+                        color: "var(--text-secondary)",
+                        border: "1px solid var(--surface-3)",
+                        borderRadius: "var(--radius-md)",
+                        fontSize: "13px",
+                        fontWeight: 500,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <i
+                        className="ti ti-plus"
+                        style={{ fontSize: "14px" }}
+                      />
+                      New Claim
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          )}
+        </div>
       </div>
 
-      {result && (
-        <div style={{ marginTop: "36px" }}>
-          <h2 style={{ fontSize: "18px", fontWeight: 600, color: "#111827", marginBottom: "4px" }}>
-            Your coverage estimate
-          </h2>
-          <p style={{ fontSize: "13px", color: "#6B7280", marginBottom: "8px" }}>
-            This is an AI estimate only. The final decision is made by your insurer.
-          </p>
-          <AIResultCard result={result} />
+      {/* Right column */}
+      <div style={{ position: "sticky", top: "84px" }}>
+        <div
+          style={{
+            background: "var(--surface-0)",
+            border: "1px solid var(--surface-3)",
+            borderRadius: "var(--radius-lg)",
+            boxShadow: "var(--shadow-sm)",
+            overflow: "hidden",
+            marginBottom: "16px",
+          }}
+        >
+          <div
+            style={{
+              padding: "16px 18px",
+              background: "var(--brand-900)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              <i
+                className="ti ti-info-circle"
+                style={{
+                  color: "rgba(255,255,255,0.6)",
+                  fontSize: "15px",
+                }}
+              />
+
+              <span
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  color: "rgba(255,255,255,0.85)",
+                }}
+              >
+                How it works
+              </span>
+            </div>
+          </div>
+
+          <div style={{ padding: "16px 18px" }}>
+            {[
+              {
+                icon: "ti-upload",
+                title: "Upload your documents",
+                desc: "Provide your policy PDF and 3–5 damage photos for best results.",
+              },
+              {
+                icon: "ti-cpu",
+                title: "AI analyses instantly",
+                desc: "GPT-4o Vision reads your policy and inspects damage photos in seconds.",
+              },
+              {
+                icon: "ti-report",
+                title: "Get your estimate",
+                desc: "Receive a detailed coverage estimate and recommended action.",
+              },
+            ].map((item, i) => (
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  paddingBottom: i < 2 ? "14px" : "0",
+                  marginBottom: i < 2 ? "14px" : "0",
+                  borderBottom:
+                    i < 2 ? "1px solid var(--surface-2)" : "none",
+                }}
+              >
+                <div
+                  style={{
+                    width: "30px",
+                    height: "30px",
+                    flexShrink: 0,
+                    borderRadius: "8px",
+                    background: "var(--brand-50)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <i
+                    className={`ti ${ item.icon } `}
+                    style={{
+                      fontSize: "15px",
+                      color: "var(--brand-700)",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <p
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: 500,
+                      color: "var(--text-primary)",
+                      marginBottom: "3px",
+                    }}
+                  >
+                    {item.title}
+                  </p>
+
+                  <p
+                    style={{
+                      fontSize: "12px",
+                      color: "var(--text-muted)",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {item.desc}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      )}
+
+        <div
+          style={{
+            padding: "14px 16px",
+            background: "var(--warning-bg)",
+            border: "1px solid var(--warning-border)",
+            borderRadius: "var(--radius-md)",
+            display: "flex",
+            gap: "10px",
+          }}
+        >
+          <i
+            className="ti ti-alert-triangle"
+            style={{
+              fontSize: "16px",
+              color: "var(--accent-amber)",
+              flexShrink: 0,
+              marginTop: "1px",
+            }}
+          />
+
+          <div>
+            <p
+              style={{
+                fontSize: "12px",
+                fontWeight: 500,
+                color: "var(--warning-text)",
+                marginBottom: "3px",
+              }}
+            >
+              Important
+            </p>
+
+            <p
+              style={{
+                fontSize: "12px",
+                color: "var(--warning-text)",
+                opacity: 0.85,
+                lineHeight: 1.5,
+              }}
+            >
+              This tool provides an AI estimate only. Final coverage decisions
+              are made by your insurer.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
