@@ -4,15 +4,287 @@ import type { Claim } from "../types/claim.types";
 import StatusBadge from "../components/StatusBadge";
 import AIResultCard from "../components/AIResultCard";
 
+function StatCard({ icon, label, value, accent }: { icon: string; label: string; value: number; accent: string }) {
+  return (
+    <div style={{
+      background: "var(--surface-0)",
+      border: "1px solid var(--surface-3)",
+      borderRadius: "var(--radius-md)",
+      padding: "16px 18px",
+      boxShadow: "var(--shadow-sm)",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+        <div style={{
+          width: "32px", height: "32px",
+          borderRadius: "8px",
+          background: accent + "18",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <i className={`ti ${icon}`} style={{ fontSize: "16px", color: accent }} />
+        </div>
+      </div>
+      <p style={{ fontSize: "24px", fontWeight: 600, color: "var(--text-primary)", lineHeight: 1, marginBottom: "5px" }}>
+        {value}
+      </p>
+      <p style={{ fontSize: "12px", color: "var(--text-muted)" }}>{label}</p>
+    </div>
+  );
+}
+
+function ClaimRow({ claim, expanded, onToggle, onAction, acting }: {
+  claim: Claim;
+  expanded: boolean;
+  onToggle: () => void;
+  onAction: (action: string) => void;
+  acting: boolean;
+}) {
+  const fraudColor: Record<string, string> = {
+    High: "#DC2626", Medium: "#D97706", Low: "#16A34A",
+  };
+
+  return (
+    <div style={{
+      background: "var(--surface-0)",
+      border: `1px solid ${expanded ? "var(--brand-200)" : "var(--surface-3)"}`,
+      borderRadius: "var(--radius-lg)",
+      overflow: "hidden",
+      boxShadow: expanded ? "var(--shadow-md)" : "var(--shadow-sm)",
+      transition: "border-color 0.2s, box-shadow 0.2s",
+    }}>
+      {/* Left accent bar for fraud risk */}
+      {claim.ai_result && (
+        <div style={{
+          height: "3px",
+          background: fraudColor[claim.ai_result.fraud_risk] ?? "var(--surface-3)",
+          opacity: 0.6,
+        }} />
+      )}
+
+      {/* Header row */}
+      <div
+        onClick={onToggle}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          padding: "14px 20px",
+          cursor: "pointer",
+          userSelect: "none",
+          gap: "14px",
+        }}
+      >
+        {/* Avatar */}
+        <div style={{
+          width: "40px", height: "40px", flexShrink: 0,
+          borderRadius: "50%",
+          background: "var(--brand-50)",
+          border: "1.5px solid var(--brand-100)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontFamily: "'DM Serif Display', serif",
+          fontSize: "15px",
+          fontWeight: 600,
+          color: "var(--brand-700)",
+        }}>
+          {claim.customer_name.charAt(0).toUpperCase()}
+        </div>
+
+        {/* Name + meta */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "3px" }}>
+            <p style={{ fontSize: "14px", fontWeight: 500, color: "var(--text-primary)" }}>
+              {claim.customer_name}
+            </p>
+            <span style={{
+              fontSize: "10px",
+              color: "var(--text-muted)",
+              padding: "1px 6px",
+              background: "var(--surface-2)",
+              borderRadius: "4px",
+              fontFamily: "monospace",
+            }}>
+              #{claim.id.slice(0, 8).toUpperCase()}
+            </span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <span style={{ fontSize: "12px", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
+              <i className="ti ti-currency-rupee" style={{ fontSize: "12px" }} />
+              {Number(claim.claim_amount).toLocaleString("en-IN")}
+            </span>
+            <span style={{ fontSize: "12px", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
+              <i className="ti ti-calendar" style={{ fontSize: "12px" }} />
+              {new Date(claim.submitted_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+            </span>
+            {claim.ai_result && (
+              <span style={{ fontSize: "12px", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
+                <i className="ti ti-cpu" style={{ fontSize: "12px" }} />
+                {claim.ai_result.confidence_score}% confidence
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Badges + chevron */}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+          <StatusBadge status={claim.status} size="sm" />
+          {claim.ai_result && <StatusBadge status={claim.ai_result.fraud_risk} size="sm" />}
+          <div style={{
+            width: "26px", height: "26px",
+            borderRadius: "6px",
+            background: "var(--surface-2)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "transform 0.2s",
+            transform: expanded ? "rotate(180deg)" : "none",
+          }}>
+            <i className="ti ti-chevron-down" style={{ fontSize: "14px", color: "var(--text-muted)" }} />
+          </div>
+        </div>
+      </div>
+
+      {/* Expanded panel */}
+      {expanded && (
+        <div style={{
+          borderTop: "1px solid var(--surface-2)",
+          padding: "20px",
+        }} className="animate-slideDown">
+          {/* Damage description */}
+          <div style={{ marginBottom: "4px" }}>
+            <p style={{
+              fontSize: "11px", color: "var(--text-muted)",
+              fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.06em",
+              marginBottom: "7px",
+              display: "flex", alignItems: "center", gap: "5px",
+            }}>
+              <i className="ti ti-file-description" style={{ fontSize: "12px" }} />
+              Damage Description
+            </p>
+            <p style={{
+              fontSize: "13px",
+              color: "var(--text-secondary)",
+              lineHeight: 1.65,
+              padding: "12px 14px",
+              background: "var(--surface-1)",
+              borderRadius: "var(--radius-md)",
+              border: "1px solid var(--surface-2)",
+            }}>
+              {claim.damage_desc}
+            </p>
+          </div>
+
+          {/* AI Result card */}
+          {claim.ai_result && <AIResultCard result={claim.ai_result} variant="provider" />}
+
+          {/* Action buttons */}
+          {claim.status === "ANALYSED" && (
+            <div style={{
+              display: "flex",
+              gap: "10px",
+              marginTop: "18px",
+              paddingTop: "16px",
+              borderTop: "1px solid var(--surface-2)",
+            }}>
+              <ActionButton
+                label="Approve Claim"
+                icon="ti-circle-check"
+                onClick={() => onAction("APPROVED")}
+                disabled={acting}
+                variant="success"
+              />
+              <ActionButton
+                label="Flag for Investigation"
+                icon="ti-search"
+                onClick={() => onAction("INVESTIGATE")}
+                disabled={acting}
+                variant="warning"
+              />
+              <ActionButton
+                label="Reject Claim"
+                icon="ti-circle-x"
+                onClick={() => onAction("REJECTED")}
+                disabled={acting}
+                variant="danger"
+              />
+            </div>
+          )}
+
+          {(claim.status === "APPROVED" || claim.status === "REJECTED") && (
+            <div style={{
+              marginTop: "14px",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "10px 14px",
+              background: claim.status === "APPROVED" ? "var(--success-bg)" : "var(--danger-bg)",
+              borderRadius: "var(--radius-md)",
+              border: `1px solid ${claim.status === "APPROVED" ? "var(--success-border)" : "var(--danger-border)"}`,
+            }}>
+              <i
+                className={`ti ${claim.status === "APPROVED" ? "ti-circle-check" : "ti-circle-x"}`}
+                style={{
+                  fontSize: "16px",
+                  color: claim.status === "APPROVED" ? "var(--success-text)" : "var(--danger-text)",
+                }}
+              />
+              <span style={{
+                fontSize: "13px",
+                fontWeight: 500,
+                color: claim.status === "APPROVED" ? "var(--success-text)" : "var(--danger-text)",
+              }}>
+                Final decision recorded: {claim.status === "APPROVED" ? "Claim Approved" : "Claim Rejected"}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ActionButton({ label, icon, onClick, disabled, variant }: {
+  label: string; icon: string; onClick: () => void;
+  disabled: boolean; variant: "success" | "warning" | "danger";
+}) {
+  const styles = {
+    success: { bg: "var(--success-bg)", color: "var(--success-text)", border: "var(--success-border)", hoverBg: "#dcfce7" },
+    warning: { bg: "var(--warning-bg)", color: "var(--warning-text)", border: "var(--warning-border)", hoverBg: "#fef3c7" },
+    danger: { bg: "var(--danger-bg)", color: "var(--danger-text)", border: "var(--danger-border)", hoverBg: "#ffe4e6" },
+  };
+  const s = styles[variant];
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        display: "flex", alignItems: "center", gap: "6px",
+        padding: "8px 16px",
+        background: s.bg,
+        color: s.color,
+        border: `1px solid ${s.border}`,
+        borderRadius: "var(--radius-md)",
+        fontSize: "13px",
+        fontWeight: 500,
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.6 : 1,
+        transition: "all 0.15s",
+      }}
+      onMouseEnter={e => { if (!disabled) (e.currentTarget as HTMLButtonElement).style.background = s.hoverBg; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = s.bg; }}
+    >
+      <i className={`ti ${icon}`} style={{ fontSize: "14px" }} />
+      {label}
+    </button>
+  );
+}
+
 export default function ProviderDashboard() {
-  const [claims, setClaims]       = useState<Claim[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [expanded, setExpanded]   = useState<string | null>(null);
-  const [acting, setActing]       = useState<string | null>(null);
-  const [error, setError]         = useState("");
+  const [claims, setClaims] = useState<Claim[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [acting, setActing] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  const [filter, setFilter] = useState<string>("ALL");
 
   const load = async () => {
     setError("");
+    setLoading(true);
     try {
       const data = await fetchClaims();
       setClaims(data.reverse());
@@ -37,235 +309,180 @@ export default function ProviderDashboard() {
     }
   };
 
-  const actionBtn = (
-    claimId: string,
-    label: string,
-    action: string,
-    bg: string,
-    color: string,
-    border: string
-  ) => (
-    <button
-      disabled={acting === claimId}
-      onClick={() => handleAction(claimId, action)}
-      style={{
-        padding: "6px 16px",
-        background: bg,
-        color,
-        border: `1px solid ${border}`,
-        borderRadius: "7px",
-        fontSize: "13px",
-        fontWeight: 500,
-        cursor: acting === claimId ? "not-allowed" : "pointer",
-      }}
-    >
-      {label}
-    </button>
-  );
+  const stats = {
+    total: claims.length,
+    pending: claims.filter(c => c.status === "PENDING").length,
+    analysed: claims.filter(c => c.status === "ANALYSED").length,
+    highRisk: claims.filter(c => c.ai_result?.fraud_risk === "High").length,
+  };
+
+  const filters = ["ALL", "PENDING", "ANALYSED", "APPROVED", "REJECTED"];
+  const filtered = filter === "ALL" ? claims : claims.filter(c => c.status === filter);
 
   if (loading) {
     return (
-      <div style={{ maxWidth: 820, margin: "40px auto", padding: "0 20px" }}>
-        <p style={{ color: "#6B7280", fontSize: "14px" }}>Loading claims...</p>
+      <div style={{ maxWidth: "960px", margin: "0 auto", padding: "36px 24px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "12px", marginBottom: "24px" }}>
+          {[0, 1, 2, 3].map(i => (
+            <div key={i} className="skeleton" style={{ height: "88px", borderRadius: "var(--radius-md)" }} />
+          ))}
+        </div>
+        {[0, 1, 2].map(i => (
+          <div key={i} className="skeleton" style={{ height: "72px", borderRadius: "var(--radius-lg)", marginBottom: "10px" }} />
+        ))}
       </div>
     );
   }
 
   return (
-    <div style={{ maxWidth: 820, margin: "40px auto", padding: "0 20px" }}>
-
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-end",
-          marginBottom: "24px",
-        }}
-      >
+    <div style={{ maxWidth: "960px", margin: "0 auto", padding: "36px 24px" }}>
+      {/* Header */}
+      <div style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        marginBottom: "24px",
+      }}>
         <div>
-          <h1 style={{ fontSize: "22px", fontWeight: 600, color: "#111827", marginBottom: "4px" }}>
-            Claims dashboard
-          </h1>
-          <p style={{ fontSize: "14px", color: "#6B7280" }}>
-            {claims.length} claim{claims.length !== 1 ? "s" : ""} total
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+            <div style={{
+              width: "36px", height: "36px",
+              borderRadius: "10px",
+              background: "var(--brand-50)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <i className="ti ti-layout-dashboard" style={{ fontSize: "18px", color: "var(--brand-700)" }} />
+            </div>
+            <h1 style={{
+              fontFamily: "'DM Serif Display', serif",
+              fontSize: "22px",
+              color: "var(--text-primary)",
+            }}>
+              Claims Dashboard
+            </h1>
+          </div>
+          <p style={{ fontSize: "14px", color: "var(--text-secondary)" }}>
+            Review AI-assessed claims and take final action
           </p>
         </div>
         <button
           onClick={load}
           style={{
-            padding: "8px 16px",
-            background: "#fff",
-            border: "1px solid #D1D5DB",
-            borderRadius: "8px",
+            display: "flex", alignItems: "center", gap: "7px",
+            padding: "9px 16px",
+            background: "var(--surface-0)",
+            border: "1px solid var(--surface-3)",
+            borderRadius: "var(--radius-md)",
             fontSize: "13px",
+            fontWeight: 500,
             cursor: "pointer",
-            color: "#374151",
+            color: "var(--text-secondary)",
+            boxShadow: "var(--shadow-sm)",
+            transition: "all 0.15s",
           }}
+          onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--brand-200)"}
+          onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--surface-3)"}
         >
-          ↻ Refresh
+          <i className="ti ti-refresh" style={{ fontSize: "14px" }} />
+          Refresh
         </button>
       </div>
 
+      {/* Stats */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px", marginBottom: "24px" }}>
+        <StatCard icon="ti-files" label="Total Claims" value={stats.total} accent="var(--brand-600)" />
+        <StatCard icon="ti-clock" label="Awaiting Review" value={stats.analysed} accent="#D97706" />
+        <StatCard icon="ti-cpu" label="Pending Analysis" value={stats.pending} accent="#3B7EC8" />
+        <StatCard icon="ti-shield-x" label="High Fraud Risk" value={stats.highRisk} accent="#DC2626" />
+      </div>
+
+      {/* Error state */}
       {error && (
-        <div
-          style={{
-            padding: "12px 16px",
-            background: "#FEF2F2",
-            border: "1px solid #FECACA",
-            borderRadius: "8px",
-            fontSize: "13px",
-            color: "#991B1B",
-            marginBottom: "20px",
-          }}
-        >
+        <div style={{
+          padding: "12px 16px",
+          background: "var(--danger-bg)",
+          border: "1px solid var(--danger-border)",
+          borderRadius: "var(--radius-md)",
+          fontSize: "13px",
+          color: "var(--danger-text)",
+          marginBottom: "20px",
+          display: "flex", alignItems: "center", gap: "8px",
+        }}>
+          <i className="ti ti-alert-circle" style={{ fontSize: "15px" }} />
           {error}
         </div>
       )}
 
-      {claims.length === 0 && !error && (
-        <div
-          style={{
-            padding: "48px",
-            textAlign: "center",
-            border: "1px dashed #D1D5DB",
-            borderRadius: "10px",
-          }}
-        >
-          <p style={{ color: "#9CA3AF", fontSize: "14px" }}>
-            No claims yet. Submit one from the Customer Portal.
+      {/* Filter bar */}
+      <div style={{
+        display: "flex",
+        gap: "6px",
+        marginBottom: "16px",
+        background: "var(--surface-0)",
+        border: "1px solid var(--surface-3)",
+        borderRadius: "var(--radius-md)",
+        padding: "4px",
+        width: "fit-content",
+      }}>
+        {filters.map(f => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            style={{
+              padding: "6px 14px",
+              borderRadius: "7px",
+              border: "none",
+              fontSize: "12px",
+              fontWeight: filter === f ? 500 : 400,
+              background: filter === f ? "var(--brand-900)" : "transparent",
+              color: filter === f ? "#fff" : "var(--text-muted)",
+              cursor: "pointer",
+              transition: "all 0.15s",
+            }}
+          >
+            {f === "ALL" ? `All (${claims.length})` : f.charAt(0) + f.slice(1).toLowerCase()}
+          </button>
+        ))}
+      </div>
+
+      {/* Empty state */}
+      {filtered.length === 0 && !error && (
+        <div style={{
+          padding: "56px 24px",
+          textAlign: "center",
+          border: "1.5px dashed var(--surface-3)",
+          borderRadius: "var(--radius-lg)",
+          background: "var(--surface-0)",
+        }}>
+          <div style={{
+            width: "48px", height: "48px",
+            borderRadius: "12px",
+            background: "var(--surface-2)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            margin: "0 auto 14px",
+          }}>
+            <i className="ti ti-inbox" style={{ fontSize: "22px", color: "var(--text-muted)" }} />
+          </div>
+          <p style={{ fontSize: "15px", fontWeight: 500, color: "var(--text-primary)", marginBottom: "6px" }}>
+            No claims found
+          </p>
+          <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>
+            {filter === "ALL" ? "Submit a claim from the Customer Portal to get started." : `No claims with status "${filter}".`}
           </p>
         </div>
       )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-        {claims.map((claim) => (
-          <div
-            key={claim.id}
-            style={{
-              background: "#fff",
-              border: "1px solid #E5E7EB",
-              borderRadius: "10px",
-              overflow: "hidden",
-            }}
-          >
-            {/* Header row — click to expand */}
-            <div
-              onClick={() =>
-                setExpanded(expanded === claim.id ? null : claim.id)
-              }
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "14px 20px",
-                cursor: "pointer",
-                userSelect: "none",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                <div
-                  style={{
-                    width: "38px",
-                    height: "38px",
-                    borderRadius: "50%",
-                    background: "#EEF2FF",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    color: "#4338CA",
-                    flexShrink: 0,
-                  }}
-                >
-                  {claim.customer_name.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <p
-                    style={{
-                      fontWeight: 500,
-                      fontSize: "14px",
-                      color: "#111827",
-                      marginBottom: "2px",
-                    }}
-                  >
-                    {claim.customer_name}
-                  </p>
-                  <p style={{ fontSize: "12px", color: "#9CA3AF" }}>
-                    ₹{Number(claim.claim_amount).toLocaleString("en-IN")} &nbsp;·&nbsp;{" "}
-                    {new Date(claim.submitted_at).toLocaleDateString("en-IN", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </p>
-                </div>
-              </div>
-
-              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                <StatusBadge status={claim.status} />
-                {claim.ai_result && (
-                  <StatusBadge status={claim.ai_result.fraud_risk} />
-                )}
-                <span style={{ color: "#9CA3AF", fontSize: "12px", marginLeft: "4px" }}>
-                  {expanded === claim.id ? "▲" : "▼"}
-                </span>
-              </div>
-            </div>
-
-            {/* Expanded detail panel */}
-            {expanded === claim.id && (
-              <div
-                style={{
-                  padding: "0 20px 20px",
-                  borderTop: "1px solid #F3F4F6",
-                }}
-              >
-                <p
-                  style={{
-                    fontSize: "11px",
-                    color: "#94A3B8",
-                    marginTop: "14px",
-                    marginBottom: "4px",
-                  }}
-                >
-                  DAMAGE DESCRIPTION
-                </p>
-                <p style={{ fontSize: "14px", color: "#1F2937", lineHeight: 1.6 }}>
-                  {claim.damage_desc}
-                </p>
-
-                {claim.ai_result && <AIResultCard result={claim.ai_result} />}
-
-                {claim.status === "ANALYSED" && (
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "10px",
-                      marginTop: "18px",
-                      paddingTop: "16px",
-                      borderTop: "1px solid #F1F5F9",
-                    }}
-                  >
-                    {actionBtn(claim.id, "✓ Approve", "APPROVED", "#DCFCE7", "#166534", "#86EFAC")}
-                    {actionBtn(claim.id, "✗ Reject",  "REJECTED", "#FEE2E2", "#991B1B", "#FCA5A5")}
-                  </div>
-                )}
-
-                {(claim.status === "APPROVED" || claim.status === "REJECTED") && (
-                  <p
-                    style={{
-                      marginTop: "14px",
-                      fontSize: "13px",
-                      color: "#6B7280",
-                    }}
-                  >
-                    Final decision recorded:{" "}
-                    <strong>{claim.status}</strong>
-                  </p>
-                )}
-              </div>
-            )}
+      {/* Claim list */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        {filtered.map((claim, i) => (
+          <div key={claim.id} style={{ animationDelay: `${i * 50}ms` }} className="animate-fadeInUp">
+            <ClaimRow
+              claim={claim}
+              expanded={expanded === claim.id}
+              onToggle={() => setExpanded(expanded === claim.id ? null : claim.id)}
+              onAction={(action) => handleAction(claim.id, action)}
+              acting={acting === claim.id}
+            />
           </div>
         ))}
       </div>
