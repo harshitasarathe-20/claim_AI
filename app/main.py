@@ -1,8 +1,19 @@
-from fastapi import Depends, UploadFile, File, Form
+from fastapi import FastAPI, Depends, UploadFile, File, Form
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.controller import claim_controller
 from app.model.claim import Claim, AIResult
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.post("/submit")
 async def submit_claim(

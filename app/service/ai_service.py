@@ -1,7 +1,7 @@
 import os, base64, json
 from openai import OpenAI
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def analyse(claim_data: dict, policy_text: str, image_paths: list[str]) -> dict:
     # Encode images to base64 for the API
@@ -38,13 +38,22 @@ Analyse the photos and return this exact JSON:
 
     messages = [{"type": "text", "text": prompt}] + image_messages
 
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[{"role": "user", "content": messages}],
-        max_tokens=1000
-    )
+    # HARDCODED RESPONSE FOR TESTING
+    raw = """{
+  "damage_location": "Front bumper and hood",
+  "severity": "Moderate",
+  "fraud_risk": "Low",
+  "confidence_score": 88,
+  "observations": "Clear collision damage to front-end. Paint transfer marks consistent with vehicle impact. No signs of deliberate damage. Repair estimate appears reasonable for damage severity.",
+  "recommended_action": "Approve"
+}"""
 
-    raw = response.choices[0].message.content
+    # response = client.chat.completions.create(
+    #     model="gpt-4o",
+    #     messages=[{"role": "user", "content": messages}],
+    #     max_tokens=1000
+    # )
+
     # Strip markdown code fences if present
     clean = raw.replace("```json", "").replace("```", "").strip()
     return json.loads(clean)
