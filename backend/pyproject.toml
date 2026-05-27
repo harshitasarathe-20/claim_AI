@@ -1,7 +1,7 @@
 [project]
 name = "claim-ai"
-version = "0.1.0"
-description = "AI-assisted car insurance claim processing"
+version = "2026.5.1"
+description = "AI-assisted Car Insurance Claim Portal"
 requires-python = ">=3.13"
 
 dependencies = [
