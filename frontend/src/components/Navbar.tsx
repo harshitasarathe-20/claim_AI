@@ -18,7 +18,7 @@ export default function Navbar() {
       boxShadow: "var(--shadow-md)",
       backdropFilter: "blur(8px)",
     }}>
-      {/* Brand */}
+     
       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
         <div style={{
           width: "38px",
@@ -56,7 +56,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Nav links */}
+     
       <div style={{
         display: "flex",
         background: "rgba(255,255,255,0.08)",
@@ -69,7 +69,7 @@ export default function Navbar() {
         <NavLink to="/provider" label="Provider Dashboard" icon="ti-layout-dashboard" active={pathname === "/provider"} />
       </div>
 
-      {/* Status indicator */}
+     
       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
         <span style={{
           width: "8px", height: "8px",

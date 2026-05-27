@@ -209,7 +209,7 @@ export default function CustomerPortal() {
         alignItems: "start",
       }}
     >
-      {/* Left column */}
+      
       <div>
         <div style={{ marginBottom: "28px" }}>
           <div
@@ -276,7 +276,7 @@ export default function CustomerPortal() {
             overflow: "hidden",
           }}
         >
-          {/* STEP 0 */}
+          
           {step === 0 && (
             <div
               style={{ padding: "24px 28px" }}
@@ -460,7 +460,7 @@ export default function CustomerPortal() {
             </div>
           )}
 
-          {/* STEP 1 */}
+          
           {step === 1 && (
             <div
               style={{ padding: "24px 28px" }}
@@ -631,7 +631,6 @@ export default function CustomerPortal() {
             </div>
           )}
 
-          {/* STEP 2 */}
           {step === 2 && (
             <div
               style={{ padding: "24px 28px" }}
@@ -798,7 +797,7 @@ export default function CustomerPortal() {
         </div>
       </div>
 
-      {/* Right column */}
+    
       <div style={{ position: "sticky", top: "84px" }}>
         <div
           style={{

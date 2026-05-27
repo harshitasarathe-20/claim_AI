@@ -83,7 +83,7 @@ function ClaimRow({ claim, expanded, onToggle, onAction, acting }: {
       boxShadow: expanded ? "0 8px 24px rgba(15,23,42,0.12)" : "var(--shadow-sm)",
       transition: "all var(--transition)",
     }}>
-      {/* Left accent bar for fraud risk */}
+      
       {claim.ai_result && (
         <div style={{
           height: "4px",
@@ -92,7 +92,7 @@ function ClaimRow({ claim, expanded, onToggle, onAction, acting }: {
         }} />
       )}
 
-      {/* Header row */}
+      
       <div
         onClick={onToggle}
         style={{
@@ -108,7 +108,7 @@ function ClaimRow({ claim, expanded, onToggle, onAction, acting }: {
         onMouseEnter={e => !expanded && (e.currentTarget.parentElement!.style.borderColor = "var(--brand-200)")}
         onMouseLeave={e => !expanded && (e.currentTarget.parentElement!.style.borderColor = "var(--surface-3)")}
       >
-        {/* Avatar */}
+        
         <div style={{
           width: "44px", height: "44px", flexShrink: 0,
           borderRadius: "10px",
@@ -124,7 +124,7 @@ function ClaimRow({ claim, expanded, onToggle, onAction, acting }: {
           {claim.customer_name.charAt(0).toUpperCase()}
         </div>
 
-        {/* Name + meta */}
+        
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
             <p style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-primary)" }}>
@@ -160,7 +160,7 @@ function ClaimRow({ claim, expanded, onToggle, onAction, acting }: {
           </div>
         </div>
 
-        {/* Badges + chevron */}
+       
         <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
           <StatusBadge status={claim.status} size="sm" />
           {claim.ai_result && <StatusBadge status={claim.ai_result.fraud_risk} size="sm" />}
@@ -178,14 +178,14 @@ function ClaimRow({ claim, expanded, onToggle, onAction, acting }: {
         </div>
       </div>
 
-      {/* Expanded panel */}
+      
       {expanded && (
         <div style={{
           borderTop: "1.5px solid var(--surface-2)",
           padding: "24px 22px",
           background: "linear-gradient(to bottom, transparent, rgba(59,126,200,0.02))",
         }} className="animate-slideDown">
-          {/* Damage description */}
+          
           <div style={{ marginBottom: "20px" }}>
             <p style={{
               fontSize: "12px", color: "var(--text-muted)",
@@ -209,10 +209,10 @@ function ClaimRow({ claim, expanded, onToggle, onAction, acting }: {
             </p>
           </div>
 
-          {/* AI Result card */}
+          
           {claim.ai_result && <AIResultCard result={claim.ai_result} variant="provider" />}
 
-          {/* Action buttons */}
+         
           {claim.status === "ANALYSED" && (
             <div style={{
               display: "flex",
@@ -380,7 +380,7 @@ export default function ProviderDashboard() {
 
   return (
     <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "40px 24px" }}>
-      {/* Header */}
+      
       <div style={{ marginBottom: "32px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px" }}>
           <div style={{
@@ -407,7 +407,7 @@ export default function ProviderDashboard() {
         </p>
       </div>
 
-      {/* Core Metrics Row */}
+      
       {metrics && (
         <div style={{
           display: "grid",
@@ -422,7 +422,7 @@ export default function ProviderDashboard() {
         </div>
       )}
 
-      {/* Key Performance Indicators - Highlighted Section */}
+      
       {metrics && (
         <div style={{
           display: "grid",
@@ -529,7 +529,7 @@ export default function ProviderDashboard() {
         </div>
       )}
 
-      {/* Error state */}
+    
       {error && (
         <div style={{
           padding: "14px 18px",
@@ -587,7 +587,6 @@ export default function ProviderDashboard() {
         ))}
       </div>
 
-      {/* Empty state */}
       {filtered.length === 0 && !error ? (
         <div style={{
           textAlign: "center", padding: "60px 20px",

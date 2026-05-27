@@ -94,7 +94,7 @@ export default function AIResultCard({ result, variant = "provider" }: Props) {
       transition: "all var(--transition)",
     }}
       className="animate-fadeInUp">
-      {/* Card header */}
+     
       <div style={{
         padding: "16px 20px",
         background: "linear-gradient(135deg, var(--brand-900) 0%, var(--brand-800) 100%)",
@@ -137,7 +137,7 @@ export default function AIResultCard({ result, variant = "provider" }: Props) {
         </div>
       </div>
 
-      {/* Fraud risk banner for high/medium */}
+      
       {(result.fraud_risk === "High" || result.fraud_risk === "Medium") && (
         <div style={{
           padding: "12px 20px",

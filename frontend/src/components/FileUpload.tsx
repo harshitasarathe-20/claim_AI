@@ -45,7 +45,7 @@ export default function FileUpload({ accept, multiple, label, hint, icon, files,
 
     return (
         <div>
-            {/* Drop zone */}
+            
             <div
                 onClick={() => inputRef.current?.click()}
                 onDragOver={e => { e.preventDefault(); setDragging(true); }}
@@ -98,7 +98,7 @@ export default function FileUpload({ accept, multiple, label, hint, icon, files,
                 />
             </div>
 
-            {/* File list */}
+            
             {hasFiles && (
                 <div style={{ marginTop: "14px", display: "flex", flexDirection: "column", gap: "8px" }}>
                     {files.map((file, idx) => (
