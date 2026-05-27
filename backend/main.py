@@ -24,7 +24,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.post("/submit")
+@app.post("/submit", tags=["Claims"])
 async def submit_claim(
     customer_name: str = Form(...),
     claim_amount: str = Form(...),
@@ -36,7 +36,7 @@ async def submit_claim(
     return claim_controller.submit_claim(db, customer_name, claim_amount, damage_desc, images, policy_pdf)
 
 
-@app.post("/upload-imagekit")
+@app.post("/upload-imagekit", tags=["Image Upload"])
 async def upload_imagekit(images: list[UploadFile] = File(...)):
     """Upload provided files to ImageKit via `imagekit_service.upload_images`.
 
@@ -59,11 +59,11 @@ class ImageDetectRequest(BaseModel):
     image_url: str
     prompt: str = "Describe the scene in one sentence."
 
-@app.post("/detect-image")
+@app.post("/detect-image", tags=["Image Detection"])
 def detect_image(request: ImageDetectRequest):
     return detect_image_url(request.image_url, request.prompt)
 
-@app.get("/claims")
+@app.get("/claims", tags=["Claims"])
 def list_claims(db: Session = Depends(get_db)):
     claims = db.query(Claim).all()
     results = []
