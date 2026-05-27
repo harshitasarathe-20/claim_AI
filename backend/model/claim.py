@@ -7,6 +7,7 @@ class Claim(Base):
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     submitted_at = Column(DateTime, default=datetime.datetime.utcnow)
     customer_name = Column(String)
+    customer_email = Column(String)
     claim_amount = Column(Float)
     damage_desc = Column(String)
     status = Column(String, default="PENDING")
