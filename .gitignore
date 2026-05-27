@@ -44,6 +44,9 @@ frontend/.env.*
 .vscode/
 *.code-workspace
 
+# ─── Intellij IDEA ────────────────────────────────────────────────────
+.idea/
+
 # ─── OS files ───────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
