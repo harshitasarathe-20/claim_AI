@@ -10,7 +10,11 @@ from service import imagekit_service
 import shutil
 import os
 
-app = FastAPI()
+app = FastAPI(
+    title="Claim AI",
+    description="Backend API for processing insurance claims with AI analysis and image handling.",
+    version="2026.5.1"
+)
 
 app.add_middleware(
     CORSMiddleware,
