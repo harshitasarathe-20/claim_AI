@@ -1,8 +1,6 @@
 import os
-from urllib import response
 from dotenv import load_dotenv
 import requests
-import json
 from openai import OpenAI
 
 load_dotenv()
@@ -36,13 +34,13 @@ def _detect_ai_generated_image(image_url: str) -> dict:
 
     DETECTION_URL = "https://api.thehive.ai/api/v3/hive/ai-generated-and-deepfake-content-detection"
 
-    payload = json.loads('''{
+    payload = {
         "input": [
             {
-            "media_url": "https://thehive.ai/images/5d6a517.jpg"
+                "media_url": image_url
             }
         ]
-    }''')
+    }
 
     response = requests.post(
         DETECTION_URL,
