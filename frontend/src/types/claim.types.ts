@@ -11,6 +11,7 @@ export interface Claim {
   id: string;
   submitted_at: string;
   customer_name: string;
+  customer_email: string;
   claim_amount: number;
   damage_desc: string;
   status: "PENDING" | "ANALYSED" | "APPROVED" | "REJECTED";
@@ -22,4 +23,14 @@ export interface Claim {
 export interface SubmitClaimResponse {
   claim_id: string;
   ai_result: AIResult;
+}
+
+export interface Metrics {
+  total_claims: number;
+  pending_claims: number;
+  analysed_claims: number;
+  approved_claims: number;
+  fraud_claims: number;
+  money_saved: number;
+  hours_saved: number;
 }

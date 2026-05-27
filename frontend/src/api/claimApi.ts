@@ -1,10 +1,11 @@
 import axios from "axios";
-import type { Claim, SubmitClaimResponse } from "../types/claim.types";
+import type { Claim, SubmitClaimResponse, Metrics } from "../types/claim.types";
 
 const BASE = "http://localhost:8000";
 
 export const submitClaim = async (
   customerName: string,
+  customerEmail: string,
   claimAmount: string,
   damageDesc: string,
   images: File[],
@@ -12,6 +13,7 @@ export const submitClaim = async (
 ): Promise<SubmitClaimResponse> => {
   const form = new FormData();
   form.append("customer_name", customerName);
+  form.append("customer_email", customerEmail);
   form.append("claim_amount", claimAmount);
   form.append("damage_desc", damageDesc);
   form.append("policy_pdf", policyPdf);
@@ -22,6 +24,11 @@ export const submitClaim = async (
 
 export const fetchClaims = async (): Promise<Claim[]> => {
   const res = await axios.get<Claim[]>(`${BASE}/claims`);
+  return res.data;
+};
+
+export const fetchMetrics = async (): Promise<Metrics> => {
+  const res = await axios.get<Metrics>(`${BASE}/metrics`);
   return res.data;
 };
 

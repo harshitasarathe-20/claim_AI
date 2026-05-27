@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 def submit_claim(
     db: Session,
     customer_name,
+    customer_email,
     claim_amount,
     damage_desc,
     images,
@@ -32,6 +33,7 @@ def submit_claim(
 
     claim = Claim(
         customer_name=customer_name,
+        customer_email=customer_email,
         claim_amount=float(claim_amount),
         damage_desc=damage_desc,
         policy_path=policy_path,

@@ -69,8 +69,8 @@ function StepIndicator({
                   i < current
                     ? "var(--brand-700)"
                     : i === current
-                    ? "var(--brand-900)"
-                    : "var(--surface-3)",
+                      ? "var(--brand-900)"
+                      : "var(--surface-3)",
                 border:
                   i === current
                     ? "2px solid var(--brand-900)"
@@ -142,6 +142,7 @@ function StepIndicator({
 
 export default function CustomerPortal() {
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [amount, setAmount] = useState("");
   const [desc, setDesc] = useState("");
   const [images, setImages] = useState<File[]>([]);
@@ -154,12 +155,13 @@ export default function CustomerPortal() {
   const handleSubmit = async () => {
     if (
       !name ||
+      !email ||
       !amount ||
       !desc ||
       policy.length === 0 ||
-      images.length === 0
+      images.length < 3
     ) {
-      setError("Please complete all fields and upload required files.");
+      setError("Please complete all fields and upload at least 3 images.");
       return;
     }
 
@@ -171,6 +173,7 @@ export default function CustomerPortal() {
     try {
       const res = await submitClaim(
         name,
+        email,
         amount,
         desc,
         images,
@@ -189,10 +192,10 @@ export default function CustomerPortal() {
   };
 
   const canProceedStep0 =
-    name.trim() && amount.trim() && desc.trim();
+    name.trim() && email.trim() && amount.trim() && desc.trim();
 
   const canProceedStep1 =
-    policy.length > 0 && images.length > 0;
+    policy.length > 0 && images.length >= 3 && images.length <= 10;
 
   return (
     <div
@@ -334,6 +337,33 @@ export default function CustomerPortal() {
                       placeholder="e.g. Rahul Sharma"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
+                      style={{ paddingLeft: "36px" }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label text="Email address" required />
+
+                  <div style={{ position: "relative" }}>
+                    <i
+                      className="ti ti-mail"
+                      style={{
+                        position: "absolute",
+                        left: "12px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        fontSize: "15px",
+                        color: "var(--text-muted)",
+                        pointerEvents: "none",
+                      }}
+                    />
+
+                    <input
+                      type="email"
+                      placeholder="e.g. rahul@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       style={{ paddingLeft: "36px" }}
                     />
                   </div>
@@ -488,13 +518,31 @@ export default function CustomerPortal() {
                   <FileUpload
                     accept="image/*"
                     multiple
-                    maxFiles={5}
-                    label="Upload damage photos (3–5 recommended)"
-                    hint="Drag and drop or click to browse"
+                    maxFiles={10}
+                    label="Upload damage photos (minimum 3, maximum 10)"
+                    hint="Drag and drop or click to browse — JPG and PNG only"
                     icon="ti-camera"
                     files={images}
                     onChange={setImages}
                   />
+
+                  <p
+                    style={{
+                      fontSize: "11px",
+                      color: "var(--text-muted)",
+                      marginTop: "7px",
+                    }}
+                  >
+                    {images.length < 3 ? (
+                      <span style={{ color: "#DC2626", fontWeight: 500 }}>
+                        ✕ Minimum 3 images required ({images.length}/3)
+                      </span>
+                    ) : (
+                      <span style={{ color: "#16A34A", fontWeight: 500 }}>
+                        ✓ {images.length} images selected
+                      </span>
+                    )}
+                  </p>
                 </div>
               </div>
 
@@ -714,6 +762,7 @@ export default function CustomerPortal() {
                         setResult(null);
                         setStep(0);
                         setName("");
+                        setEmail("");
                         setAmount("");
                         setDesc("");
                         setImages([]);
@@ -836,7 +885,7 @@ export default function CustomerPortal() {
                   }}
                 >
                   <i
-                    className={`ti ${ item.icon } `}
+                    className={`ti ${item.icon} `}
                     style={{
                       fontSize: "15px",
                       color: "var(--brand-700)",
