@@ -52,6 +52,7 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "python-multipart" },
     { name = "sqlalchemy" },
+    { name = "toon-format" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -71,6 +72,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "python-multipart", specifier = ">=0.0.12" },
     { name = "sqlalchemy", specifier = ">=2.0.0" },
+    { name = "toon-format", specifier = ">=0.1.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.32.0" },
 ]
 provides-extras = ["dev"]
@@ -562,6 +564,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/95/66/4d20cdf39a8d6a51e663b7038e3b828ff211d3891a43a713fe7e4643f3a8/starlette-1.1.0.tar.gz", hash = "sha256:e83c7fe0ddecd8719c5b840080325aec0260acec86e9832899e377b91d65e90f", size = 2660060, upload-time = "2026-05-23T16:55:41.376Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/93/79/920b8e0a8b20f793e8d64855095cb8febabf6175b8550b6f7a547d813891/starlette-1.1.0-py3-none-any.whl", hash = "sha256:7f0dfd38e428aad5cb6f9f667f0ca1d2d8ca3f3385dccac8305f79ec98458382", size = 72899, upload-time = "2026-05-23T16:55:39.201Z" },
+]
+
+[[package]]
+name = "toon-format"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d4/5c/f74ab4f7faaa00ffc0c13aea4acfdd5e1fdecf4a1e81196f39203e56dc10/toon_format-0.1.0.tar.gz", hash = "sha256:77303c9b06956fe8b0066d2bca52dfdc63e2b3abba439c3c3545dbbd43a97d48", size = 3078, upload-time = "2025-11-01T20:59:59.991Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ee/ae/c52d28ce93490f82cfbbf49e1b9a85f33449c89fc1a5aa53d476d3a69666/toon_format-0.1.0-py3-none-any.whl", hash = "sha256:f0c7bf3f63f1fc08739127ca895a55922617193f942f84474489770d7cd1ffc2", size = 4803, upload-time = "2025-11-01T20:59:58.84Z" },
 ]
 
 [[package]]
