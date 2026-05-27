@@ -9,45 +9,47 @@ export default function Navbar() {
       alignItems: "center",
       justifyContent: "space-between",
       padding: "0 32px",
-      height: "60px",
-      background: "var(--brand-900)",
-      borderBottom: "1px solid rgba(255,255,255,0.06)",
+      height: "64px",
+      background: "linear-gradient(135deg, var(--brand-900) 0%, var(--brand-800) 100%)",
+      borderBottom: "1.5px solid rgba(255,255,255,0.08)",
       position: "sticky",
       top: 0,
       zIndex: 100,
-      boxShadow: "0 1px 0 rgba(255,255,255,0.04), 0 4px 24px rgba(15,23,42,0.2)",
+      boxShadow: "var(--shadow-md)",
+      backdropFilter: "blur(8px)",
     }}>
       {/* Brand */}
-      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
         <div style={{
-          width: "34px",
-          height: "34px",
-          borderRadius: "9px",
-          background: "linear-gradient(135deg, #3B7EC8 0%, #1E5FA8 100%)",
+          width: "38px",
+          height: "38px",
+          borderRadius: "11px",
+          background: "linear-gradient(135deg, #3B7EC8 0%, #2E5FA3 100%)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          boxShadow: "0 2px 8px rgba(59,126,200,0.4)",
+          boxShadow: "0 4px 16px rgba(59,126,200,0.4), inset 0 1px 0 rgba(255,255,255,0.2)",
           flexShrink: 0,
         }}>
-          <i className="ti ti-shield-check" style={{ color: "#fff", fontSize: "17px" }} />
+          <i className="ti ti-shield-check" style={{ color: "#fff", fontSize: "19px", fontWeight: 700 }} />
         </div>
         <div style={{ lineHeight: 1.2 }}>
           <span style={{
             fontFamily: "'DM Serif Display', serif",
-            fontSize: "17px",
+            fontSize: "18px",
             color: "#FFFFFF",
             letterSpacing: "-0.01em",
+            fontWeight: 600,
           }}>
             ClaimAI
           </span>
           <span style={{
             display: "block",
             fontSize: "10px",
-            color: "rgba(255,255,255,0.35)",
+            color: "rgba(255,255,255,0.4)",
             letterSpacing: "0.08em",
             textTransform: "uppercase",
-            fontWeight: 500,
+            fontWeight: 600,
           }}>
             Insurance Platform
           </span>
@@ -57,25 +59,27 @@ export default function Navbar() {
       {/* Nav links */}
       <div style={{
         display: "flex",
-        background: "rgba(255,255,255,0.06)",
+        background: "rgba(255,255,255,0.08)",
         borderRadius: "10px",
-        padding: "3px",
+        padding: "4px",
         gap: "2px",
+        border: "1px solid rgba(255,255,255,0.12)",
       }}>
         <NavLink to="/" label="Customer Portal" icon="ti-user" active={pathname === "/"} />
         <NavLink to="/provider" label="Provider Dashboard" icon="ti-layout-dashboard" active={pathname === "/provider"} />
       </div>
 
       {/* Status indicator */}
-      <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
         <span style={{
-          width: "7px", height: "7px",
+          width: "8px", height: "8px",
           borderRadius: "50%",
           background: "#22C55E",
-          boxShadow: "0 0 0 2px rgba(34,197,94,0.25)",
+          boxShadow: "0 0 0 2px rgba(34,197,94,0.3), inset 0 0 2px rgba(0,0,0,0.2)",
           display: "inline-block",
+          animation: "pulse 2s ease-in-out infinite",
         }} />
-        <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", fontWeight: 400 }}>
+        <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", fontWeight: 500 }}>
           AI Engine Online
         </span>
       </div>
@@ -89,17 +93,31 @@ function NavLink({ to, label, icon, active }: { to: string; label: string; icon:
       display: "flex",
       alignItems: "center",
       gap: "7px",
-      padding: "7px 14px",
+      padding: "8px 16px",
       borderRadius: "8px",
       textDecoration: "none",
       fontSize: "13px",
-      fontWeight: active ? 500 : 400,
-      background: active ? "rgba(255,255,255,0.12)" : "transparent",
-      color: active ? "#FFFFFF" : "rgba(255,255,255,0.5)",
-      transition: "all 0.15s",
+      fontWeight: active ? 600 : 500,
+      background: active ? "rgba(255,255,255,0.15)" : "transparent",
+      color: active ? "#FFFFFF" : "rgba(255,255,255,0.6)",
+      transition: "all var(--transition)",
       whiteSpace: "nowrap",
-    }}>
-      <i className={`ti ${icon}`} style={{ fontSize: "15px" }} />
+      border: active ? "1px solid rgba(255,255,255,0.2)" : "1px solid transparent",
+    }}
+      onMouseEnter={e => {
+        if (!active) {
+          (e.currentTarget as HTMLAnchorElement).style.background = "rgba(255,255,255,0.1)";
+          (e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.8)";
+        }
+      }}
+      onMouseLeave={e => {
+        if (!active) {
+          (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
+          (e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.6)";
+        }
+      }}
+    >
+      <i className={`ti ${icon}`} style={{ fontSize: "16px" }} />
       {label}
     </Link>
   );

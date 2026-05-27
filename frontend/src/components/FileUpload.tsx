@@ -48,37 +48,39 @@ export default function FileUpload({ accept, multiple, label, hint, icon, files,
                 onDragLeave={() => setDragging(false)}
                 onDrop={handleDrop}
                 style={{
-                    border: `1.5px dashed ${dragging ? "var(--brand-400)" : hasFiles ? "var(--brand-200)" : "var(--surface-3)"}`,
-                    borderRadius: "var(--radius-md)",
-                    padding: "20px 16px",
+                    border: `2px dashed ${dragging ? "var(--brand-400)" : hasFiles ? "var(--brand-200)" : "var(--surface-3)"}`,
+                    borderRadius: "var(--radius-lg)",
+                    padding: "28px 20px",
                     textAlign: "center",
                     cursor: "pointer",
                     background: dragging ? "var(--brand-50)" : hasFiles ? "rgba(59,126,200,0.03)" : "var(--surface-0)",
-                    transition: "all 0.15s",
+                    transition: "all var(--transition)",
                 }}
             >
                 <div style={{
-                    width: "40px", height: "40px",
-                    borderRadius: "10px",
+                    width: "48px", height: "48px",
+                    borderRadius: "12px",
                     background: dragging ? "var(--brand-100)" : "var(--surface-2)",
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    margin: "0 auto 10px",
-                    transition: "background 0.15s",
+                    margin: "0 auto 14px",
+                    transition: "all var(--transition)",
+                    border: dragging ? "1.5px solid var(--brand-300)" : "1.5px solid transparent",
                 }}>
                     <i className={`ti ${icon}`} style={{
-                        fontSize: "20px",
+                        fontSize: "24px",
                         color: dragging ? "var(--brand-600)" : "var(--text-muted)",
-                        transition: "color 0.15s",
+                        transition: "color var(--transition)",
+                        fontWeight: 600,
                     }} />
                 </div>
-                <p style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-primary)", marginBottom: "3px" }}>
+                <p style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "4px" }}>
                     {label}
                 </p>
-                <p style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                <p style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "8px" }}>
                     {hint ?? "Drag and drop or click to browse"}
                 </p>
                 {accept === "image/*" && maxFiles && (
-                    <p style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "4px" }}>
+                    <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "6px", fontWeight: 500 }}>
                         {files.length}/{maxFiles} photos · Recommended: front, rear, close-up of damage
                     </p>
                 )}
@@ -94,37 +96,49 @@ export default function FileUpload({ accept, multiple, label, hint, icon, files,
 
             {/* File list */}
             {hasFiles && (
-                <div style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                <div style={{ marginTop: "14px", display: "flex", flexDirection: "column", gap: "8px" }}>
                     {files.map((file, idx) => (
                         <div key={idx} style={{
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "space-between",
-                            padding: "8px 12px",
+                            padding: "12px 14px",
                             background: "var(--surface-1)",
-                            border: "1px solid var(--surface-3)",
-                            borderRadius: "var(--radius-sm)",
+                            border: "1.5px solid var(--surface-3)",
+                            borderRadius: "var(--radius-md)",
                             animation: "fadeIn 0.2s ease",
-                        }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
+                            transition: "all var(--transition)",
+                        }}
+                            onMouseEnter={e => {
+                                (e.currentTarget as HTMLDivElement).style.borderColor = "var(--brand-200)";
+                                (e.currentTarget as HTMLDivElement).style.background = "var(--brand-50)";
+                            }}
+                            onMouseLeave={e => {
+                                (e.currentTarget as HTMLDivElement).style.borderColor = "var(--surface-3)";
+                                (e.currentTarget as HTMLDivElement).style.background = "var(--surface-1)";
+                            }}
+                        >
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
                                 <div style={{
-                                    width: "28px", height: "28px",
-                                    borderRadius: "6px",
+                                    width: "32px", height: "32px",
+                                    borderRadius: "8px",
                                     background: file.type === "application/pdf" ? "var(--danger-bg)" : "var(--info-bg)",
                                     display: "flex", alignItems: "center", justifyContent: "center",
                                     flexShrink: 0,
+                                    border: file.type === "application/pdf" ? "1.5px solid var(--danger-border)" : "1.5px solid var(--info-border)",
                                 }}>
                                     <i className={`ti ${file.type === "application/pdf" ? "ti-file-type-pdf" : "ti-photo"}`}
                                         style={{
-                                            fontSize: "13px",
+                                            fontSize: "16px",
                                             color: file.type === "application/pdf" ? "var(--danger-text)" : "var(--info-text)",
+                                            fontWeight: 700,
                                         }} />
                                 </div>
                                 <div style={{ minWidth: 0 }}>
-                                    <p style={{ fontSize: "12px", fontWeight: 500, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                    <p style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                         {file.name}
                                     </p>
-                                    <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                                    <p style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: 500 }}>
                                         {(file.size / 1024).toFixed(0)} KB
                                     </p>
                                 </div>
@@ -133,15 +147,22 @@ export default function FileUpload({ accept, multiple, label, hint, icon, files,
                                 onClick={e => { e.stopPropagation(); removeFile(idx); }}
                                 style={{
                                     border: "none", background: "transparent",
-                                    padding: "4px", cursor: "pointer",
-                                    color: "var(--text-muted)", borderRadius: "4px",
-                                    display: "flex", alignItems: "center",
-                                    transition: "color 0.15s, background 0.15s",
+                                    padding: "6px", cursor: "pointer",
+                                    color: "var(--text-muted)", borderRadius: "6px",
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    transition: "all var(--transition)",
+                                    flexShrink: 0,
                                 }}
-                                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--danger-text)"; (e.currentTarget as HTMLButtonElement).style.background = "var(--danger-bg)"; }}
-                                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--text-muted)"; (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+                                onMouseEnter={e => { 
+                                    (e.currentTarget as HTMLButtonElement).style.color = "var(--danger-text)"; 
+                                    (e.currentTarget as HTMLButtonElement).style.background = "var(--danger-bg)"; 
+                                }}
+                                onMouseLeave={e => { 
+                                    (e.currentTarget as HTMLButtonElement).style.color = "var(--text-muted)"; 
+                                    (e.currentTarget as HTMLButtonElement).style.background = "transparent"; 
+                                }}
                             >
-                                <i className="ti ti-x" style={{ fontSize: "14px" }} />
+                                <i className="ti ti-x" style={{ fontSize: "16px", fontWeight: 700 }} />
                             </button>
                         </div>
                     ))}

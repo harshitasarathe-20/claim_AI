@@ -36,18 +36,20 @@ export default function StatusBadge({ status, size = "md" }: Props) {
     <span style={{
       display: "inline-flex",
       alignItems: "center",
-      gap: isSmall ? "4px" : "5px",
-      padding: isSmall ? "2px 8px" : "4px 10px",
+      gap: isSmall ? "4px" : "6px",
+      padding: isSmall ? "3px 10px" : "5px 12px",
       borderRadius: "999px",
       fontSize: isSmall ? "11px" : "12px",
-      fontWeight: 500,
+      fontWeight: isSmall ? 600 : 600,
       background: c.bg,
       color: c.color,
-      border: `1px solid ${c.border}`,
-      letterSpacing: "0.01em",
+      border: `1.5px solid ${c.border}`,
+      letterSpacing: "0.02em",
       whiteSpace: "nowrap",
+      transition: "all var(--transition)",
+      boxShadow: `inset 0 1px 0 rgba(255,255,255,0.5)`,
     }}>
-      <i className={`ti ${c.icon}`} style={{ fontSize: isSmall ? "11px" : "12px" }} />
+      <i className={`ti ${c.icon}`} style={{ fontSize: isSmall ? "10px" : "13px", fontWeight: 700 }} />
       {c.text}
     </span>
   );
