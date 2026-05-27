@@ -23,10 +23,15 @@ def submit_claim(db: Session, customer_name, claim_amount, damage_desc, images, 
 
     # 4. Run AI analysis
     ai_result_data = ai_service.analyse(
-        {"customer_name": customer_name, "claim_amount": claim_amount, "damage_desc": damage_desc},
-        policy_text,
-        image_paths
-    )
+    {
+        "customer_name": customer_name,
+        "claim_amount": claim_amount,
+        "damage_desc": damage_desc,
+        "policy_path": policy_path, 
+    },
+    policy_text,
+    image_paths
+)
 
     # 5. Save AI result
     ai_result = AIResult(claim_id=claim.id, **ai_result_data)

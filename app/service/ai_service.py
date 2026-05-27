@@ -1,73 +1,97 @@
 import os
-import base64
+import time
 import json
-from langchain_google_genai import ChatGoogleGenerativeAI
+from google import genai
 from langchain_core.messages import HumanMessage
+from langchain_google_genai import ChatGoogleGenerativeAI
+
 
 def analyse(claim_data: dict, policy_text: str, image_paths: list[str]) -> dict:
-    # Build image content blocks
-    content = []
 
-    # Add text prompt first
+    # Step 1: Create client (reads GOOGLE_API_KEY from .env automatically)
+    client = genai.Client()
+
+    # Step 2: Create model
+    model = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+
+    # Step 3: Upload policy PDF to Google's servers
+    policy_path = claim_data.get("policy_path", "")
+    uploaded_policy = client.files.upload(file=policy_path)
+
+    # Step 4: Wait for it to finish processing (exact same while loop as docs)
+    while uploaded_policy.state.name == "PROCESSING":
+        time.sleep(2)
+        uploaded_policy = client.files.get(name=uploaded_policy.name)
+
+    # Step 5: Upload each damage image the same way
+    uploaded_images = []
+    for path in image_paths[:5]:
+        uploaded_img = client.files.upload(file=path)
+        while uploaded_img.state.name == "PROCESSING":
+            time.sleep(2)
+            uploaded_img = client.files.get(name=uploaded_img.name)
+        uploaded_images.append(uploaded_img)
+
+    # Step 6: Build the message content (exact same structure as docs)
+    #         - text block first
+    #         - then file blocks (policy PDF + images)
+
     prompt = f"""
-You are an expert car insurance claims analyst. Analyse the following claim carefully and respond ONLY with a valid JSON object — no markdown, no explanation, no code fences.
-
-POLICY TEXT (first 3000 chars):
-{policy_text[:3000]}
+You are an expert car insurance claims analyst.
+Analyse the attached policy document and the damage photos provided.
 
 CLAIM DETAILS:
 - Customer: {claim_data['customer_name']}
 - Claimed Amount: {claim_data['claim_amount']}
 - Damage Description: {claim_data['damage_desc']}
 
-Analyse all provided damage photos and return ONLY this exact JSON structure:
+Respond ONLY with a valid JSON object. No markdown, no explanation, no code fences.
+
 {{
   "damage_location": "which part of the car is damaged",
   "severity": "Minor | Moderate | Severe | Total Loss",
   "fraud_risk": "Low | Medium | High",
   "confidence_score": 85,
-  "observations": "detailed multi-sentence observations about damage, consistency with description, and policy coverage",
+  "observations": "detailed observations about damage and policy coverage",
   "recommended_action": "Approve | Investigate | Reject"
 }}
 """
-    content.append({"type": "text", "text": prompt})
 
-    # Add images (max 5)
-    for path in image_paths[:5]:
-        try:
-            with open(path, "rb") as f:
-                b64 = base64.b64encode(f.read()).decode("utf-8")
-            # Detect mime type from extension
-            ext = path.lower().split(".")[-1]
-            mime = "image/png" if ext == "png" else "image/jpeg"
-            content.append({
-                "type": "image_url",
-                "image_url": {"url": f"data:{mime};base64,{b64}"}
-            })
-        except Exception as e:
-            print(f"[ai_service] Could not load image {path}: {e}")
+    content = [
+        # Text prompt (same as {"type": "text", "text": "What is in the document?"})
+        {"type": "text", "text": prompt},
 
-    # Initialise the model
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash",
-        google_api_key=os.getenv("GOOGLE_API_KEY"),
-        temperature=0.2,      # Low temp for consistent structured output
-        max_tokens=1000,
-    )
+        # Policy PDF (same as the file block in docs)
+        {
+            "type": "file",
+            "file_id": uploaded_policy.uri,
+            "mime_type": "application/pdf",
+        },
+    ]
 
-    # Call the model
+    # Add each uploaded image as a file block (same pattern, different mime_type)
+    for uploaded_img in uploaded_images:
+        ext = uploaded_img.name.lower().split(".")[-1]
+        mime = "image/png" if ext == "png" else "image/jpeg"
+        content.append({
+            "type": "file",
+            "file_id": uploaded_img.uri,
+            "mime_type": mime,
+        })
+
+    # Step 7: Create HumanMessage and invoke (exact same as docs)
     message = HumanMessage(content=content)
-    response = llm.invoke([message])
-    raw = response.content
+    response = model.invoke([message])
 
-    # Strip markdown fences if model wraps response anyway
+
+    # Step 8: Parse the response
+    raw = response.text if hasattr(response, "text") else str(response.content)
     clean = raw.replace("```json", "").replace("```", "").strip()
 
     try:
         return json.loads(clean)
     except json.JSONDecodeError as e:
-        print(f"[ai_service] JSON parse error: {e}\nRaw response: {raw}")
-        # Return a safe fallback so the claim isn't lost
+        print(f"[ai_service] JSON parse error: {e}\nRaw: {raw}")
         return {
             "damage_location": "Unable to determine",
             "severity": "Unknown",
