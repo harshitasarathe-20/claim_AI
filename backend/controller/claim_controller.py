@@ -51,10 +51,6 @@ def submit_claim(
     )
 
     # 4. Run AI analysis
-    # Merged:
-    # - your branch policy_path support
-    # - main branch structure compatibility
-
     ai_result_data = ai_service.analyse(
         {
             "customer_name": customer_name,
