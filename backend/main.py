@@ -12,7 +12,7 @@ import os
 
 app = FastAPI(
     title="Claim AI",
-    description="Backend API for processing insurance claims with AI analysis and image handling.",
+    description="Backend APIs for processing Insurance Claims with AI Analysis and Image handling.",
     version="2026.5.1"
 )
 
