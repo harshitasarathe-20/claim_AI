@@ -1,5 +1,5 @@
-from app.service import file_service, policy_service, ai_service
-from app.model.claim import Claim, AIResult
+from service import file_service, policy_service, ai_service
+from model.claim import Claim, AIResult
 from sqlalchemy.orm import Session
 
 def submit_claim(db: Session, customer_name, claim_amount, damage_desc, images, policy_pdf):

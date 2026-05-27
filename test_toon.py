@@ -1,4 +1,7 @@
-from app.service.toon_service import to_toon, from_toon, token_savings_estimate
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
+from service.toon_service import to_toon, from_toon, token_savings_estimate
 import json
 
 # Test data

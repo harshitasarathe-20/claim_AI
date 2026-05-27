@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, Float, DateTime
-from app.db.database import Base
+from db.database import Base
 import uuid, datetime
 
 class Claim(Base):
