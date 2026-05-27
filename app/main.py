@@ -4,6 +4,9 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.controller import claim_controller
 from app.model.claim import Claim, AIResult
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
 
