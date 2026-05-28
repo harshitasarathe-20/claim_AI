@@ -1,7 +1,10 @@
 import StatusBadge from "./StatusBadge";
+import DamageLocationVisual from "./DamageLocationVisual";
 
 interface AIResult {
   damage_location: string;
+  impact_direction?: string;
+  collision_type?: string;
   severity: string;
   fraud_risk: "Low" | "Medium" | "High";
   confidence_score: number;
@@ -90,38 +93,61 @@ export default function AIResultCard({ result, variant = "provider" }: Props) {
         {/* Confidence meter */}
         <ConfidenceMeter score={result.confidence_score} />
 
-        {/* Metadata */}
-        <div className="ai-result-meta">
-          <MetaRow icon="ti-map-pin" label="Damage Location" value={result.damage_location} />
-          <MetaRow icon="ti-alert-triangle" label="Severity" value={
-            <span style={{
-              padding: "0.25rem 0.625rem",
-              borderRadius: "0.375rem",
-              fontSize: "0.75rem",
-              fontWeight: 700,
-              background:
-                result.severity === "Severe" || result.severity === "Total Loss"
-                  ? "var(--danger-bg)"
-                  : result.severity === "Moderate"
-                    ? "var(--warning-bg)"
-                    : "var(--success-bg)",
-              color:
-                result.severity === "Severe" || result.severity === "Total Loss"
-                  ? "var(--danger-text)"
-                  : result.severity === "Moderate"
-                    ? "var(--warning-text)"
-                    : "var(--success-text)",
-              border:
-                result.severity === "Severe" || result.severity === "Total Loss"
-                  ? "1px solid var(--danger-border)"
-                  : result.severity === "Moderate"
-                    ? "1px solid var(--warning-border)"
-                    : "1px solid var(--success-border)",
-            }}>
-              {result.severity}
-            </span>
-          } />
-          <MetaRow icon="ti-shield" label="Fraud Risk" value={<StatusBadge status={result.fraud_risk} size="sm" />} />
+        {/* Damage Location Visual */}
+        <div className="ai-result-damage-visual">
+          <DamageLocationVisual damageLocation={result.damage_location} />
+        </div>
+
+        {/* Comprehensive Analysis Grid */}
+        <div className="ai-result-analysis-grid">
+          {/* Column 1: Damage Details */}
+          <div className="ai-result-column">
+            <h3 className="ai-result-section-title">Damage Analysis</h3>
+            <div className="ai-result-meta">
+              <MetaRow icon="ti-alert-triangle" label="Severity" value={
+                <span style={{
+                  padding: "0.25rem 0.625rem",
+                  borderRadius: "0.375rem",
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  background:
+                    result.severity === "Severe" || result.severity === "Total Loss"
+                      ? "var(--danger-bg)"
+                      : result.severity === "Moderate"
+                        ? "var(--warning-bg)"
+                        : "var(--success-bg)",
+                  color:
+                    result.severity === "Severe" || result.severity === "Total Loss"
+                      ? "var(--danger-text)"
+                      : result.severity === "Moderate"
+                        ? "var(--warning-text)"
+                        : "var(--success-text)",
+                  border:
+                    result.severity === "Severe" || result.severity === "Total Loss"
+                      ? "1px solid var(--danger-border)"
+                      : result.severity === "Moderate"
+                        ? "1px solid var(--warning-border)"
+                        : "1px solid var(--success-border)",
+                }}>
+                {result.severity}
+              </span>
+              } />
+              {result.impact_direction && result.impact_direction !== "Unknown" && (
+                <MetaRow icon="ti-arrow-up-right" label="Impact Direction" value={result.impact_direction} />
+              )}
+              {result.collision_type && result.collision_type !== "Unknown" && (
+                <MetaRow icon="ti-car" label="Collision Type" value={result.collision_type} />
+              )}
+            </div>
+          </div>
+
+          {/* Column 2: Risk Assessment */}
+          <div className="ai-result-column">
+            <h3 className="ai-result-section-title">Risk Assessment</h3>
+            <div className="ai-result-meta">
+              <MetaRow icon="ti-shield" label="Fraud Risk" value={<StatusBadge status={result.fraud_risk} size="sm" />} />
+            </div>
+          </div>
         </div>
 
         {/* Observations */}
@@ -130,7 +156,7 @@ export default function AIResultCard({ result, variant = "provider" }: Props) {
             <div className="ai-result-observations-icon">
               <i className="ti ti-notes" />
             </div>
-            <span className="ai-result-observations-label">AI Observations</span>
+            <span className="ai-result-observations-label">AI Observations & Analysis</span>
           </div>
           <p className="ai-result-observations-text">{result.observations}</p>
         </div>
@@ -142,6 +168,22 @@ export default function AIResultCard({ result, variant = "provider" }: Props) {
             <span className="ai-result-action-text">Recommended Action</span>
           </div>
           <StatusBadge status={result.recommended_action} />
+        </div>
+
+        {/* Final Recommendation Summary */}
+        <div className="ai-result-summary">
+          <div className="ai-result-summary-title">
+            <i className="ti ti-checklist ai-result-summary-icon" />
+            <span>Summary & Final Decision</span>
+          </div>
+          <p className="ai-result-summary-text">
+            Based on comprehensive AI analysis: {result.severity.toLowerCase()} damage detected at {result.damage_location}.
+            Confidence level: {result.confidence_score}%. 
+            {result.fraud_risk === "High" ? " High fraud risk detected - requires immediate investigation." : 
+             result.fraud_risk === "Medium" ? " Moderate fraud risk - recommend careful review." :
+             " Low fraud risk - claim appears legitimate."}
+            Recommended action: <strong>{result.recommended_action}</strong>.
+          </p>
         </div>
 
         {/* Disclaimer */}

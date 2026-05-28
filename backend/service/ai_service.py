@@ -20,15 +20,15 @@ logger = logging.getLogger(__name__)
 # ── Mock result ──────────────────────────────────────────────────────────────
 
 MOCK_RESULT = {
-    "damage_location": "Front bumper",
-    "impact_direction": "Head-on",
-    "severity": "Moderate",
-    "collision_type": "Single vehicle",
-    "fraud_risk": "Low",
-    "confidence_score": 75,
-    "observations": "Mock result — GOOGLE_API_KEY not configured",
+    "damage_location": "Unable to determine",
+    "impact_direction": "Unknown",
+    "severity": "Unknown",
+    "collision_type": "Unknown",
+    "fraud_risk": "Medium",
+    "confidence_score": 0,
+    "observations": "AI analysis could not be performed. Please contact support.",
     "recommended_action": "Investigate",
-    "raw_response": "mock|data:true"
+    "raw_response": "error|api_failed"
 }
 
 
@@ -49,16 +49,29 @@ def analyse(
     image_paths: list[str]
 ) -> dict:
 
-    # Step 1: Create client
-    # Reads GOOGLE_API_KEY automatically from .env
+    # Step 1: Create client with explicit API key
+    api_key = os.getenv("GOOGLE_API_KEY")
+    
+    if not api_key:
+        logger.error("GOOGLE_API_KEY not found in environment variables")
+        return MOCK_RESULT
 
-    client = genai.Client()
+    try:
+        client = genai.Client(api_key=api_key)
+    except Exception as e:
+        logger.error("Failed to initialize Gemini client: %s", e)
+        return MOCK_RESULT
 
     # Step 2: Create model
 
-    model = ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash"
-    )
+    try:
+        model = ChatGoogleGenerativeAI(
+            model="gemini-2.5-flash",
+            google_api_key=api_key
+        )
+    except Exception as e:
+        logger.error("Failed to initialize ChatGoogleGenerativeAI model: %s", e)
+        return MOCK_RESULT
 
     # Step 3: Upload policy PDF to Google servers
 
@@ -287,5 +300,17 @@ Do NOT include any markdown, explanations, or code fences.
     except Exception as e:
 
         logger.exception("Gemini invocation failed: %s", e)
-
-        return MOCK_RESULT
+        
+        error_msg = f"AI analysis failed: {str(e)[:200]}"
+        
+        return {
+            "damage_location": "Unable to determine",
+            "impact_direction": "Unknown",
+            "collision_type": "Unknown",
+            "severity": "Unknown",
+            "fraud_risk": "Medium",
+            "confidence_score": 0,
+            "observations": error_msg,
+            "recommended_action": "Investigate",
+            "raw_response": f"error|{error_msg}"
+        }

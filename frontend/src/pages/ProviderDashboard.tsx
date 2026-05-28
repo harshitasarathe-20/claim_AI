@@ -122,7 +122,7 @@ function ClaimRow({ claim, expanded, onToggle, onAction, acting }: ClaimRowProps
           className="animate-slideDown"
         >
           {/* Damage Description */}
-          <div style={{ marginBottom: "1.25rem" }}>
+          <div style={{ marginBottom: "1.5rem" }}>
             <p
               style={{
                 fontSize: "0.75rem",
@@ -154,8 +154,12 @@ function ClaimRow({ claim, expanded, onToggle, onAction, acting }: ClaimRowProps
             </p>
           </div>
 
-          {/* AI Result Card */}
-          {claim.ai_result && <AIResultCard result={claim.ai_result} variant="provider" />}
+          {/* AI Result Card with Full Analysis */}
+          {claim.ai_result && (
+            <div style={{ marginBottom: "1.5rem" }}>
+              <AIResultCard result={claim.ai_result} variant="provider" />
+            </div>
+          )}
 
           {/* Action Buttons */}
           {claim.status === "ANALYSED" && (
