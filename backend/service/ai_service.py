@@ -3,111 +3,19 @@ import time
 import json
 import base64
 import json as jsonlib
-
 from dotenv import load_dotenv
 
-# Load .env before creating clients
 load_dotenv()
+
+import logging
 
 from google import genai
 from langchain_core.messages import HumanMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
+from service.toon_service import to_toon, from_toon, token_savings
 
-
-# ── TOON helpers ─────────────────────────────────────────────────────────────
-
-def to_toon(data: dict, prefix: str = "") -> str:
-    """Convert dict to TOON pipe-separated string."""
-    parts = []
-
-    for key, value in data.items():
-
-        full_key = f"{prefix}.{key}" if prefix else key
-
-        if isinstance(value, dict):
-
-            parts.append(to_toon(value, prefix=full_key))
-
-        elif isinstance(value, list):
-
-            if len(value) == 0:
-
-                parts.append(f"{full_key}:")
-
-            elif isinstance(value[0], dict):
-
-                for i, item in enumerate(value):
-                    parts.append(
-                        to_toon(item, prefix=f"{full_key}[{i}]")
-                    )
-
-            else:
-
-                parts.append(
-                    f"{full_key}:{','.join(str(v) for v in value)}"
-                )
-
-        elif value is None:
-
-            parts.append(f"{full_key}:null")
-
-        elif isinstance(value, bool):
-
-            parts.append(
-                f"{full_key}:{'true' if value else 'false'}"
-            )
-
-        else:
-
-            parts.append(f"{full_key}:{value}")
-
-    return "|".join(parts)
-
-
-def from_toon(toon_string: str) -> dict:
-    """Convert TOON string back to Python dict."""
-
-    result = {}
-
-    if not toon_string or not toon_string.strip():
-        return result
-
-    for pair in toon_string.strip().split("|"):
-
-        if ":" not in pair:
-            continue
-
-        key, _, value = pair.partition(":")
-
-        key = key.strip()
-        value = value.strip()
-
-        if value == "null":
-
-            result[key] = None
-
-        elif value == "true":
-
-            result[key] = True
-
-        elif value == "false":
-
-            result[key] = False
-
-        elif value.isdigit():
-
-            result[key] = int(value)
-
-        else:
-
-            try:
-                result[key] = float(value)
-
-            except ValueError:
-                result[key] = value
-
-    return result
-
+# Logger
+logger = logging.getLogger(__name__)
 
 # ── Mock result ──────────────────────────────────────────────────────────────
 
@@ -198,9 +106,7 @@ def analyse(
 
         except Exception as e:
 
-            print(
-                f"[WARNING] Failed to upload image {path}: {e}"
-            )
+            logger.warning("Failed to upload image %s: %s", path, e)
 
     # ── TOON analytics ──────────────────────────────────────────────────────
 
@@ -220,43 +126,33 @@ def analyse(
         if json_size > 0 else 0
     )
 
-    print(f"\n[TOON] Prompt token savings:")
-    print(f"  JSON size : {json_size} chars")
-    print(f"  TOON size : {toon_size} chars")
-    print(f"  Saved     : {percent}% (~{round(saved/4)} tokens)\n")
+    logger.info("[TOON] Prompt token savings: JSON=%s chars, TOON=%s chars, Saved=%s%% (~%s tokens)", json_size, toon_size, percent, round(saved/4))
 
     # ── Prompt ──────────────────────────────────────────────────────────────
 
+    # Instruct model to respond in TOON format (compact token-optimized),
+    # then decode back to JSON using `from_toon`.
     prompt = f"""
 You are an expert car insurance claims analyst.
 Analyse the attached policy document and the damage photos provided.
 
-CLAIM DETAILS:
-- Customer: {claim_data['customer_name']}
-- Claimed Amount: {claim_data['claim_amount']}
-- Damage Description: {claim_data['damage_desc']}
-
-TOON FORMAT VERSION (token optimized):
+CLAIM DETAILS (TOON):
 {claim_toon}
 
 POLICY EXCERPT:
 {policy_text[:2000]}
 
-Respond ONLY with a valid JSON object.
-No markdown.
-No explanation.
-No code fences.
+Respond ONLY in TOON format representing a mapping with the following keys:
+- damage_location
+- impact_direction
+- severity (Minor | Moderate | Severe | Total Loss)
+- collision_type
+- fraud_risk (Low | Medium | High)
+- confidence_score (numeric)
+- observations
+- recommended_action (Approve | Investigate | Reject)
 
-{{
-  "damage_location": "which part of the car is damaged",
-  "impact_direction": "direction of impact",
-  "severity": "Minor | Moderate | Severe | Total Loss",
-  "collision_type": "type of collision",
-  "fraud_risk": "Low | Medium | High",
-  "confidence_score": 85,
-  "observations": "detailed observations about damage and policy coverage",
-  "recommended_action": "Approve | Investigate | Reject"
-}}
+Do NOT include any markdown, explanations, or code fences.
 """
 
     # ── Build content ───────────────────────────────────────────────────────
@@ -312,13 +208,26 @@ No code fences.
             else str(response.content)
         )
 
-        clean = (
-            raw.replace("```json", "")
-            .replace("```", "")
-            .strip()
-        )
+        logger.debug("AI raw response length: %d", len(str(raw)))
 
-        parsed = json.loads(clean)
+        # Try TOON decode first
+        parsed = from_toon(raw)
+
+        if parsed:
+            logger.info("Parsed response via TOON with keys: %s", list(parsed.keys()))
+
+        # Fallback: if TOON decode failed, try stripping code fences and parse JSON
+        if not parsed:
+            clean = (
+                raw.replace("```json", "")
+                .replace("```", "")
+                .strip()
+            )
+            try:
+                parsed = json.loads(clean)
+                logger.info("Parsed response via JSON fallback with keys: %s", list(parsed.keys()))
+            except Exception:
+                parsed = {}
 
         # Add raw response
 
@@ -355,13 +264,12 @@ No code fences.
 
             parsed["confidence_score"] = 50
 
+        logger.info("Final parsed AI result: damage_location=%s impact_direction=%s severity=%s confidence=%s recommended_action=%s", parsed.get("damage_location"), parsed.get("impact_direction"), parsed.get("severity"), parsed.get("confidence_score"), parsed.get("recommended_action"))
         return parsed
 
     except json.JSONDecodeError as e:
 
-        print(
-            f"[ai_service] JSON parse error: {e}\nRaw: {raw}"
-        )
+        logger.error("JSON parse error: %s — Raw start: %s", e, str(raw)[:300])
 
         return {
             "damage_location": "Unable to determine",
@@ -378,8 +286,6 @@ No code fences.
 
     except Exception as e:
 
-        print(
-            f"[ai_service] Gemini invocation failed: {e}"
-        )
+        logger.exception("Gemini invocation failed: %s", e)
 
         return MOCK_RESULT

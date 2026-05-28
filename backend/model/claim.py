@@ -18,6 +18,8 @@ class AIResult(Base):
     __tablename__ = "ai_results"
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     claim_id = Column(String)
+    impact_direction = Column(String)
+    collision_type = Column(String)
     damage_location = Column(String)
     severity = Column(String)
     fraud_risk = Column(String)

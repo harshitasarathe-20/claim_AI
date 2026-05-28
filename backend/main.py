@@ -6,6 +6,16 @@ from db.database import get_db
 from controller import claim_controller
 from model.claim import Claim, AIResult
 from pydantic import BaseModel
+from db import database
+import logging
+
+
+# Configure root logger for the application
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s - %(message)s"
+)
+logger = logging.getLogger("claim_ai")
 
 class ActionRequest(BaseModel):
     claim_id: str
@@ -14,6 +24,7 @@ from service.image_detection_service import detect_image_url
 from service import imagekit_service
 import shutil
 import os
+from sqlalchemy import text
 
 app = FastAPI(
     title="Claim AI",
@@ -29,6 +40,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.on_event("startup")
+def startup():
+    logger.info("Application startup: ensuring database tables exist")
+    # Ensure all tables are created when the app starts
+    database.Base.metadata.create_all(bind=database.engine)
+    logger.info("Database tables ensured")
+    # Ensure new columns exist in existing SQLite tables (safe ALTER TABLE)
+    try:
+        with database.engine.connect() as conn:
+            # ai_results needs 'impact_direction' and 'collision_type'
+            info = conn.execute(text("PRAGMA table_info('ai_results');")).mappings().all()
+            existing = {row['name'] for row in info}
+            if 'impact_direction' not in existing:
+                logger.info("Adding missing column 'impact_direction' to ai_results table")
+                conn.execute(text("ALTER TABLE ai_results ADD COLUMN impact_direction TEXT;"))
+            if 'collision_type' not in existing:
+                logger.info("Adding missing column 'collision_type' to ai_results table")
+                conn.execute(text("ALTER TABLE ai_results ADD COLUMN collision_type TEXT;"))
+    except Exception as e:
+        logger.warning("Failed to ensure ai_results columns: %s", e)
+
+
+@app.on_event("shutdown")
+def shutdown_event():
+    logger.info("Application shutdown")
+
 @app.post("/submit", tags=["Claims"])
 async def submit_claim(
     customer_name: str = Form(...),
@@ -39,6 +77,7 @@ async def submit_claim(
     policy_pdf: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
+    logger.info("API /submit called: customer=%s amount=%s images=%d", customer_name, claim_amount, len(images) if images else 0)
     return claim_controller.submit_claim(db, customer_name, customer_email, claim_amount, damage_desc, images, policy_pdf)
 
 
@@ -58,7 +97,9 @@ async def upload_imagekit(images: list[UploadFile] = File(...)):
             shutil.copyfileobj(img.file, f)
         saved_paths.append(dest)
 
+    logger.info("API /upload-imagekit called: files=%d", len(saved_paths))
     results = imagekit_service.upload_images(saved_paths)
+    logger.info("API /upload-imagekit completed: uploaded=%d", len(results) if results else 0)
     return {"uploaded": results}
 
 class ImageDetectRequest(BaseModel):
@@ -67,10 +108,12 @@ class ImageDetectRequest(BaseModel):
 
 @app.post("/detect-image", tags=["Image Detection"])
 def detect_image(request: ImageDetectRequest):
+    logger.info("API /detect-image called: url=%s", request.image_url)
     return detect_image_url(request.image_url, request.prompt)
 
 @app.get("/claims", tags=["Claims"])
 def list_claims(db: Session = Depends(get_db)):
+    logger.info("API /claims called: listing claims")
     claims = db.query(Claim).all()
     results = []
     for c in claims:
@@ -83,6 +126,7 @@ def update_claim_action(request: ActionRequest, db: Session = Depends(get_db)):
     claim_id = request.claim_id
     action = request.action
     
+    logger.info("API /action called: claim_id=%s action=%s", request.claim_id, request.action)
     claim = db.query(Claim).filter(Claim.id == claim_id).first()
     if not claim:
         return {"error": "Claim not found"}
@@ -101,6 +145,7 @@ def update_claim_action(request: ActionRequest, db: Session = Depends(get_db)):
 
 @app.get("/metrics")
 def get_metrics(db: Session = Depends(get_db)):
+    logger.info("API /metrics called")
     all_claims = db.query(Claim).all()
     
     # Calculate metrics
