@@ -165,7 +165,7 @@ def get_metrics(db: Session = Depends(get_db)):
             money_saved += claim.claim_amount
     
     # Calculate human hours saved (estimate: 30 mins per claim analyzed)
-    hours_saved = (analysed_claims + approved_claims) * 0.5
+    hours_saved = (analysed_claims + approved_claims + fraud_claims) * 2
     
     return {
         "total_claims": total_claims,
