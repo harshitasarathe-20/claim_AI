@@ -8,21 +8,9 @@ const STEPS = ["Claim Details", "Upload Files", "AI Analysis"];
 
 function Label({ text, required }: { text: string; required?: boolean }) {
   return (
-    <label
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "4px",
-        fontSize: "13px",
-        fontWeight: 500,
-        color: "var(--text-primary)",
-        marginBottom: "7px",
-      }}
-    >
+    <label className="form-label">
       {text}
-      {required && (
-        <span style={{ color: "#DC2626", fontSize: "12px" }}>*</span>
-      )}
+      {required && <span className="form-required">*</span>}
     </label>
   );
 }
@@ -35,103 +23,32 @@ function StepIndicator({
   steps: string[];
 }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        marginBottom: "32px",
-        gap: "0",
-      }}
-    >
+    <div className="step-indicator">
       {steps.map((step, i) => (
         <div
           key={i}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            flex: i < steps.length - 1 ? 1 : "none",
-          }}
+          className="step-item"
         >
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "6px",
-            }}
-          >
+          <div className="step-circle">
             <div
-              style={{
-                width: "28px",
-                height: "28px",
-                borderRadius: "50%",
-                background:
-                  i < current
-                    ? "var(--brand-700)"
-                    : i === current
-                      ? "var(--brand-900)"
-                      : "var(--surface-3)",
-                border:
-                  i === current
-                    ? "2px solid var(--brand-900)"
-                    : "2px solid transparent",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transition: "all 0.25s",
-                boxShadow:
-                  i === current
-                    ? "0 0 0 3px rgba(30,58,92,0.15)"
-                    : "none",
-              }}
+              className={`step-number ${
+                i < current ? "completed" : i === current ? "current" : "pending"
+              }`}
             >
               {i < current ? (
-                <i
-                  className="ti ti-check"
-                  style={{ color: "#fff", fontSize: "13px" }}
-                />
+                <i className="ti ti-check" />
               ) : (
-                <span
-                  style={{
-                    fontSize: "12px",
-                    fontWeight: 600,
-                    color:
-                      i === current ? "#fff" : "var(--text-muted)",
-                  }}
-                >
-                  {i + 1}
-                </span>
+                <span>{i + 1}</span>
               )}
             </div>
-
-            <span
-              style={{
-                fontSize: "11px",
-                fontWeight: i === current ? 500 : 400,
-                color:
-                  i === current
-                    ? "var(--text-primary)"
-                    : "var(--text-muted)",
-                whiteSpace: "nowrap",
-              }}
-            >
+            <span className={`step-label ${i === current ? "current" : ""}`}>
               {step}
             </span>
           </div>
 
           {i < steps.length - 1 && (
             <div
-              style={{
-                flex: 1,
-                height: "1.5px",
-                background:
-                  i < current
-                    ? "var(--brand-700)"
-                    : "var(--surface-3)",
-                margin: "0 6px",
-                marginBottom: "22px",
-                transition: "background 0.25s",
-              }}
+              className={`step-line ${i < current ? "completed" : "pending"}`}
             />
           )}
         </div>
@@ -852,7 +769,7 @@ export default function CustomerPortal() {
               {
                 icon: "ti-cpu",
                 title: "AI analyses instantly",
-                desc: "GPT-4o Vision reads your policy and inspects damage photos in seconds.",
+                desc: "Gemini 2.5 Flash reads your policy and HIVE inspects damage photos in seconds.",
               },
               {
                 icon: "ti-report",

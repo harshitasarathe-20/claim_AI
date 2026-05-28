@@ -21,29 +21,22 @@ function ConfidenceMeter({ score }: { score: number }) {
     return "#DC2626";
   };
 
+  const colorClass = score >= 80 ? "high" : score >= 60 ? "medium" : "low";
+
   return (
-    <div>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-        <span style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-          Confidence Score
-        </span>
-        <span style={{ fontSize: "14px", fontWeight: 700, color: getColor() }}>{score}%</span>
+    <div className="ai-result-meter">
+      <div className="ai-result-meter-label">
+        <span className="ai-result-meter-title">Confidence Score</span>
+        <span className={`ai-result-meter-value ${colorClass}`}>{score}%</span>
       </div>
-      <div style={{
-        height: "6px",
-        background: "var(--surface-3)",
-        borderRadius: "3px",
-        overflow: "hidden",
-        border: "1px solid var(--surface-2)",
-      }}>
-        <div style={{
-          height: "100%",
-          width: `${score}%`,
-          background: `linear-gradient(90deg, ${getColor()} 0%, ${getColor()}dd 100%)`,
-          borderRadius: "3px",
-          transition: "width 0.8s cubic-bezier(0.4,0,0.2,1)",
-          boxShadow: `inset 0 1px 0 rgba(255,255,255,0.4), 0 1px 3px ${getColor()}40`,
-        }} />
+      <div className="ai-result-meter-bar">
+        <div
+          className="ai-result-meter-fill"
+          style={{
+            width: `${score}%`,
+            background: `linear-gradient(90deg, ${getColor()} 0%, ${getColor()}dd 100%)`,
+          }}
+        />
       </div>
     </div>
   );
@@ -51,105 +44,40 @@ function ConfidenceMeter({ score }: { score: number }) {
 
 function MetaRow({ icon, label, value }: { icon: string; label: string; value: React.ReactNode }) {
   return (
-    <div style={{
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      padding: "11px 0",
-      borderBottom: "1px solid var(--surface-2)",
-    }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-        <div style={{
-          width: "30px", height: "30px",
-          borderRadius: "8px",
-          background: "var(--surface-2)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          border: "1px solid var(--surface-3)",
-        }}>
-          <i className={`ti ${icon}`} style={{ fontSize: "14px", color: "var(--text-muted)", fontWeight: 600 }} />
+    <div className="ai-result-meta-row">
+      <div className="ai-result-meta-label">
+        <div className="ai-result-meta-icon">
+          <i className={`ti ${icon}`} />
         </div>
-        <span style={{ fontSize: "13px", color: "var(--text-secondary)", fontWeight: 500 }}>{label}</span>
+        <span className="ai-result-meta-text">{label}</span>
       </div>
-      <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-primary)" }}>{value}</div>
+      <div className="ai-result-meta-value">{value}</div>
     </div>
   );
 }
 
 export default function AIResultCard({ result, variant = "provider" }: Props) {
-  const fraudColors: Record<string, { accent: string; bg: string }> = {
-    Low: { accent: "#16A34A", bg: "#F0FDF4" },
-    Medium: { accent: "#D97706", bg: "#FFFBEB" },
-    High: { accent: "#DC2626", bg: "#FFF1F2" },
-  };
-  const fraud = fraudColors[result.fraud_risk] ?? { accent: "var(--brand-400)", bg: "var(--brand-50)" };
-
   return (
-    <div style={{
-      marginTop: "22px",
-      background: "var(--surface-0)",
-      border: "1.5px solid var(--surface-3)",
-      borderRadius: "var(--radius-lg)",
-      overflow: "hidden",
-      boxShadow: "var(--shadow-md)",
-      transition: "all var(--transition)",
-    }}
-      className="animate-fadeInUp">
-     
-      <div style={{
-        padding: "16px 20px",
-        background: "linear-gradient(135deg, var(--brand-900) 0%, var(--brand-800) 100%)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        borderBottom: "1.5px solid rgba(0,0,0,0.2)",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <div style={{
-            width: "36px", height: "36px",
-            borderRadius: "8px",
-            background: "rgba(255,255,255,0.1)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            border: "1px solid rgba(255,255,255,0.2)",
-          }}>
-            <i className="ti ti-cpu" style={{ color: "rgba(255,255,255,0.8)", fontSize: "17px", fontWeight: 600 }} />
+    <div className="ai-result-card animate-fadeInUp">
+      {/* Header */}
+      <div className="ai-result-header">
+        <div className="ai-result-title">
+          <div className="ai-result-icon">
+            <i className="ti ti-cpu" />
           </div>
-          <span style={{
-            fontSize: "13px",
-            fontWeight: 600,
-            color: "rgba(255,255,255,0.9)",
-            letterSpacing: "0.05em",
-            textTransform: "uppercase",
-          }}>
-            AI Analysis Result
-          </span>
+          <span className="ai-result-text">AI Analysis Result</span>
         </div>
-        <div style={{
-          fontSize: "11px",
-          color: "rgba(255,255,255,0.5)",
-          display: "flex",
-          alignItems: "center",
-          gap: "6px",
-          fontWeight: 600,
-          letterSpacing: "0.03em",
-        }}>
-          <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22C55E", display: "inline-block", boxShadow: "0 0 0 2px rgba(34,197,94,0.3)" }} />
-          GPT-4o Vision
+        <div className="ai-result-engine">
+          <span className="ai-result-engine-dot" />
+          Gemini 2.5 Flash Vision
         </div>
       </div>
 
-      
+      {/* Alert */}
       {(result.fraud_risk === "High" || result.fraud_risk === "Medium") && (
-        <div style={{
-          padding: "12px 20px",
-          background: fraud.bg,
-          borderBottom: `1.5px solid ${result.fraud_risk === "High" ? "var(--danger-border)" : "var(--warning-border)"}`,
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-        }}>
-          <i className={`ti ${result.fraud_risk === "High" ? "ti-alert-triangle" : "ti-alert-circle"}`}
-            style={{ color: fraud.accent, fontSize: "17px", fontWeight: 700, flexShrink: 0 }} />
-          <span style={{ fontSize: "13px", fontWeight: 600, color: fraud.accent }}>
+        <div className={`ai-result-alert ${result.fraud_risk === "Medium" ? "warning" : ""}`}>
+          <i className={`ti ${result.fraud_risk === "High" ? "ti-alert-triangle" : "ti-alert-circle"} ai-result-alert-icon`} />
+          <span className="ai-result-alert-text">
             {result.fraud_risk === "High"
               ? "Fraud Risk Detected – Manual review strongly recommended"
               : "Possible inconsistencies detected – Review carefully"}
@@ -157,30 +85,38 @@ export default function AIResultCard({ result, variant = "provider" }: Props) {
         </div>
       )}
 
-      <div style={{ padding: "20px" }}>
+      {/* Content */}
+      <div className="ai-result-content">
         {/* Confidence meter */}
-        <div style={{ marginBottom: "20px" }}>
-          <ConfidenceMeter score={result.confidence_score} />
-        </div>
+        <ConfidenceMeter score={result.confidence_score} />
 
-        {/* Metadata grid */}
-        <div style={{ marginBottom: "6px" }}>
+        {/* Metadata */}
+        <div className="ai-result-meta">
           <MetaRow icon="ti-map-pin" label="Damage Location" value={result.damage_location} />
           <MetaRow icon="ti-alert-triangle" label="Severity" value={
             <span style={{
-              padding: "4px 10px",
-              borderRadius: "6px",
-              fontSize: "12px",
+              padding: "0.25rem 0.625rem",
+              borderRadius: "0.375rem",
+              fontSize: "0.75rem",
               fontWeight: 700,
-              background: result.severity === "Severe" || result.severity === "Total Loss"
-                ? "var(--danger-bg)" : result.severity === "Moderate"
-                  ? "var(--warning-bg)" : "var(--success-bg)",
-              color: result.severity === "Severe" || result.severity === "Total Loss"
-                ? "var(--danger-text)" : result.severity === "Moderate"
-                  ? "var(--warning-text)" : "var(--success-text)",
-              border: result.severity === "Severe" || result.severity === "Total Loss"
-                ? "1px solid var(--danger-border)" : result.severity === "Moderate"
-                  ? "1px solid var(--warning-border)" : "1px solid var(--success-border)",
+              background:
+                result.severity === "Severe" || result.severity === "Total Loss"
+                  ? "var(--danger-bg)"
+                  : result.severity === "Moderate"
+                    ? "var(--warning-bg)"
+                    : "var(--success-bg)",
+              color:
+                result.severity === "Severe" || result.severity === "Total Loss"
+                  ? "var(--danger-text)"
+                  : result.severity === "Moderate"
+                    ? "var(--warning-text)"
+                    : "var(--success-text)",
+              border:
+                result.severity === "Severe" || result.severity === "Total Loss"
+                  ? "1px solid var(--danger-border)"
+                  : result.severity === "Moderate"
+                    ? "1px solid var(--warning-border)"
+                    : "1px solid var(--success-border)",
             }}>
               {result.severity}
             </span>
@@ -189,69 +125,31 @@ export default function AIResultCard({ result, variant = "provider" }: Props) {
         </div>
 
         {/* Observations */}
-        <div style={{
-          marginTop: "18px",
-          padding: "16px",
-          background: "var(--surface-1)",
-          borderRadius: "var(--radius-md)",
-          border: "1.5px solid var(--surface-3)",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-            <div style={{
-              width: "32px", height: "32px",
-              borderRadius: "8px",
-              background: "var(--info-bg)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              border: "1px solid var(--info-border)",
-            }}>
-              <i className="ti ti-notes" style={{ fontSize: "14px", color: "var(--info-text)", fontWeight: 600 }} />
+        <div className="ai-result-observations">
+          <div className="ai-result-observations-title">
+            <div className="ai-result-observations-icon">
+              <i className="ti ti-notes" />
             </div>
-            <span style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-              AI Observations
-            </span>
+            <span className="ai-result-observations-label">AI Observations</span>
           </div>
-          <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.7 }}>
-            {result.observations}
-          </p>
+          <p className="ai-result-observations-text">{result.observations}</p>
         </div>
 
         {/* Recommended action */}
-        <div style={{
-          marginTop: "16px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "14px 16px",
-          background: "var(--surface-1)",
-          borderRadius: "var(--radius-md)",
-          border: "1.5px solid var(--surface-3)",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <i className="ti ti-gavel" style={{ fontSize: "15px", color: "var(--text-muted)", fontWeight: 600 }} />
-            <span style={{ fontSize: "13px", color: "var(--text-secondary)", fontWeight: 600 }}>
-              Recommended Action
-            </span>
+        <div className="ai-result-action">
+          <div className="ai-result-action-label">
+            <i className="ti ti-gavel ai-result-action-icon" />
+            <span className="ai-result-action-text">Recommended Action</span>
           </div>
           <StatusBadge status={result.recommended_action} />
         </div>
 
+        {/* Disclaimer */}
         {variant === "customer" && (
-          <p style={{
-            marginTop: "14px",
-            fontSize: "12px",
-            color: "var(--text-muted)",
-            display: "flex",
-            alignItems: "flex-start",
-            gap: "8px",
-            lineHeight: 1.6,
-            padding: "12px 14px",
-            background: "var(--info-bg)",
-            borderRadius: "var(--radius-md)",
-            border: "1px solid var(--info-border)",
-          }}>
-            <i className="ti ti-info-circle" style={{ fontSize: "14px", flexShrink: 0, marginTop: "2px", color: "var(--info-text)", fontWeight: 600 }} />
+          <div className="ai-result-disclaimer">
+            <i className="ti ti-info-circle ai-result-disclaimer-icon" />
             <span>This is an AI-generated estimate for informational purposes only. The final decision rests with your insurer.</span>
-          </p>
+          </div>
         )}
       </div>
     </div>
