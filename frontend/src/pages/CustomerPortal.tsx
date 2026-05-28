@@ -31,9 +31,8 @@ function StepIndicator({
         >
           <div className="step-circle">
             <div
-              className={`step-number ${
-                i < current ? "completed" : i === current ? "current" : "pending"
-              }`}
+              className={`step-number ${i < current ? "completed" : i === current ? "current" : "pending"
+                }`}
             >
               {i < current ? (
                 <i className="ti ti-check" />
@@ -126,7 +125,7 @@ export default function CustomerPortal() {
         alignItems: "start",
       }}
     >
-      
+
       <div>
         <div style={{ marginBottom: "28px" }}>
           <div
@@ -193,7 +192,7 @@ export default function CustomerPortal() {
             overflow: "hidden",
           }}
         >
-          
+
           {step === 0 && (
             <div
               style={{ padding: "24px 28px" }}
@@ -377,7 +376,7 @@ export default function CustomerPortal() {
             </div>
           )}
 
-          
+
           {step === 1 && (
             <div
               style={{ padding: "24px 28px" }}
@@ -714,7 +713,7 @@ export default function CustomerPortal() {
         </div>
       </div>
 
-    
+
       <div style={{ position: "sticky", top: "84px" }}>
         <div
           style={{

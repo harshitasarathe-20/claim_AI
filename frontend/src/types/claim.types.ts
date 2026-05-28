@@ -1,5 +1,7 @@
 export interface AIResult {
   damage_location: string;
+  impact_direction?: string;
+  collision_type?: string;
   severity: string;
   fraud_risk: "Low" | "Medium" | "High";
   confidence_score: number;
